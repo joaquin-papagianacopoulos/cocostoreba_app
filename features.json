@@ -1,0 +1,286 @@
+{
+  "_instrucciones": "Implementar en orden. Solo cambiar 'passes' (y agregar 'notes'). Nunca borrar ni editar features ni pasos de verificación.",
+  "features": [
+    {
+      "id": "F01",
+      "area": "setup",
+      "title": "Scaffold Next.js 15 + TypeScript + Tailwind + Vitest",
+      "depends_on": [],
+      "verify": [
+        "npm run build termina sin errores",
+        "npm test corre (aunque sea un test trivial) y pasa",
+        "npm run dev levanta en http://localhost:3000 y muestra una página"
+      ],
+      "passes": true,
+      "notes": "Verificado 2026-10-09: build/test/lint OK. El paso dev se probó con npm run dev + curl + Chrome headless (iframe 375px) porque el subagente no tenía preview_start."
+    },
+    {
+      "id": "F02",
+      "area": "setup",
+      "title": "Cliente Supabase (server/browser), env validado con Zod y .env.example",
+      "depends_on": [
+        "F01"
+      ],
+      "verify": [
+        "Existe .env.example con NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "Si falta una variable, el arranque falla con un mensaje claro",
+        ".env.local está en .gitignore"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F03",
+      "area": "db",
+      "title": "Migración inicial: todas las tablas, enums, RLS y seeds de SPEC §3",
+      "depends_on": [
+        "F02"
+      ],
+      "verify": [
+        "supabase/migrations/0001_*.sql crea todas las tablas de la spec",
+        "RLS activado en todas las tablas con políticas solo para authenticated",
+        "Seed de categorias_gasto y fila única de configuracion",
+        "La migración se aplica sin errores sobre una base vacía"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F04",
+      "area": "db",
+      "title": "Funciones RPC: crear_venta_minorista, confirmar_venta, anular_venta, registrar_compra, ajustar_stock",
+      "depends_on": [
+        "F03"
+      ],
+      "verify": [
+        "confirmar_venta falla con mensaje claro si falta stock y no modifica nada",
+        "Venta confirmada descuenta stock, congela costo_unitario y crea movimientos 'venta'",
+        "anular_venta devuelve el stock y crea movimientos 'anulacion'",
+        "registrar_compra recalcula el costo promedio ponderado correctamente (probar con 2 compras a distinto costo)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F05",
+      "area": "auth",
+      "title": "Login email/password, middleware que protege todas las rutas, logout",
+      "depends_on": [
+        "F02"
+      ],
+      "verify": [
+        "Sin sesión, cualquier ruta redirige a /login",
+        "Login correcto lleva al dashboard; incorrecto muestra error",
+        "Logout vuelve a /login"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F06",
+      "area": "ui",
+      "title": "Layout: sidebar desktop / navegación mobile, helpers money.ts y dates.ts",
+      "depends_on": [
+        "F05"
+      ],
+      "verify": [
+        "Navegación a todas las rutas de SPEC §2 (pueden ser placeholders)",
+        "Usable a 375px de ancho sin scroll horizontal",
+        "Tests de money.ts (formato ARS, redondeo) y dates.ts (hoy/semana/mes en hora Argentina, semana desde lunes) pasan"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F07",
+      "area": "productos",
+      "title": "ABM de categorías y productos con búsqueda y alerta de stock bajo",
+      "depends_on": [
+        "F03",
+        "F06"
+      ],
+      "verify": [
+        "Crear, editar y desactivar un producto",
+        "SKU y código de barras duplicados muestran error legible",
+        "Productos con stock <= stock_minimo se marcan visualmente",
+        "Buscar por nombre o SKU filtra la lista"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F08",
+      "area": "stock",
+      "title": "Ingreso de mercadería (compra), ajustes manuales e historial de movimientos",
+      "depends_on": [
+        "F04",
+        "F07"
+      ],
+      "verify": [
+        "Registrar una compra de varios productos suma stock y actualiza costo",
+        "Ajuste negativo con motivo resta stock",
+        "El historial lista movimientos con tipo, cantidad, fecha y producto, filtrable por producto"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F09",
+      "area": "promos",
+      "title": "lib/pricing.ts: cálculo de precios, promos (porcentaje, monto_fijo, nxm) y descuento general, con tests",
+      "depends_on": [
+        "F01"
+      ],
+      "verify": [
+        "Tests: 2x1 con 5 unidades cobra 3",
+        "Tests: con dos promos aplicables se elige la de mayor descuento",
+        "Tests: promo fuera de fecha o de otro canal no aplica",
+        "Tests: monto_fijo no deja precio negativo; totales redondeados a 2 decimales"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F10",
+      "area": "promos",
+      "title": "ABM de promociones",
+      "depends_on": [
+        "F07",
+        "F09"
+      ],
+      "verify": [
+        "Crear promo de cada tipo y alcance (producto, categoría, todo)",
+        "Activar/desactivar una promo",
+        "Validaciones: nxm requiere n > m >= 1; porcentaje entre 0 y 100"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F11",
+      "area": "pos",
+      "title": "Punto de venta minorista: buscar/escanear, carrito, promos automáticas, medio de pago, cobrar",
+      "depends_on": [
+        "F04",
+        "F09",
+        "F10"
+      ],
+      "verify": [
+        "Agregar productos por búsqueda y por código de barras (Enter en el input)",
+        "Las promos activas se aplican solas y se ven en el carrito",
+        "Descuento general manual (monto o %) funciona",
+        "Cobrar crea la venta confirmada y descuenta stock; si falta stock muestra error y no cobra",
+        "Usable en celular (375px)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F12",
+      "area": "pdf",
+      "title": "Configuración del negocio y comprobante PDF (A4) de venta",
+      "depends_on": [
+        "F11"
+      ],
+      "verify": [
+        "Guardar datos del negocio y logo en /configuracion",
+        "Al cobrar en el POS se puede descargar/imprimir el PDF",
+        "El PDF muestra nro correlativo, ítems, descuentos, total, medio de pago y la leyenda 'Comprobante no válido como factura'"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F13",
+      "area": "clientes",
+      "title": "ABM de clientes mayoristas",
+      "depends_on": [
+        "F06",
+        "F03"
+      ],
+      "verify": [
+        "Crear, editar y buscar clientes"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F14",
+      "area": "pedidos",
+      "title": "Pedidos mayoristas: crear borrador, editar ítems, confirmar, entregar, anular, PDF",
+      "depends_on": [
+        "F12",
+        "F13"
+      ],
+      "verify": [
+        "Crear pedido en borrador con cliente y precios mayoristas; no toca stock",
+        "Confirmar descuenta stock y asigna número; ya no se pueden editar ítems",
+        "Anular un pedido confirmado devuelve stock",
+        "Lista de pedidos filtrable por estado",
+        "Descargar PDF del pedido"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F15",
+      "area": "ventas",
+      "title": "Historial de ventas con filtro de fechas (Hoy/Semana/Mes/Rango en URL), anular y reimprimir",
+      "depends_on": [
+        "F12",
+        "F14"
+      ],
+      "verify": [
+        "Los 4 filtros funcionan y se reflejan en la URL (?desde&hasta); recargar mantiene el filtro",
+        "Una venta hecha a las 23:30 hora Argentina aparece en 'Hoy' y no en el día siguiente",
+        "Anular una venta la marca anulada y devuelve stock",
+        "Reimprimir PDF desde el historial"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F16",
+      "area": "gastos",
+      "title": "Gastos: ABM con adjunto en Storage privado, filtro por fecha y categoría",
+      "depends_on": [
+        "F15"
+      ],
+      "verify": [
+        "Crear gasto con foto o PDF adjunto (máx 5MB); rechaza otros tipos",
+        "Ver el adjunto mediante signed URL",
+        "Borrar el gasto borra también el archivo",
+        "Filtro de fechas reutiliza el mismo componente que ventas"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F17",
+      "area": "dashboard",
+      "title": "Funciones SQL de reportes (KPIs, series por día/semana, top productos, por categoría, por canal, por medio de pago, gastos por categoría)",
+      "depends_on": [
+        "F16"
+      ],
+      "verify": [
+        "Reciben desde/hasta y excluyen ventas anuladas y borradores",
+        "Con datos de prueba conocidos, ventas netas, CMV, ganancia bruta, gastos y ganancia neta dan los valores esperados (calcular a mano y comparar)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F18",
+      "area": "dashboard",
+      "title": "Dashboard: KPIs con variación vs período anterior, gráficos de SPEC §5 y stock bajo",
+      "depends_on": [
+        "F17"
+      ],
+      "verify": [
+        "Todos los KPIs y los 7 gráficos de SPEC §5 visibles",
+        "Cambiar el filtro (Hoy/Semana/Mes/Rango) actualiza todo",
+        "Los números coinciden con el historial de ventas y gastos del mismo período",
+        "Legible en celular"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F19",
+      "area": "pulido",
+      "title": "Pulido final: estados vacíos, loaders, errores amigables, README con setup",
+      "depends_on": [
+        "F18"
+      ],
+      "verify": [
+        "Cada pantalla tiene estado vacío y de carga",
+        "README explica cómo crear el proyecto Supabase, aplicar migraciones, crear el usuario y correr la app",
+        "npm run build, npm run lint y npm test pasan"
+      ],
+      "passes": false
+    }
+  ]
+}
