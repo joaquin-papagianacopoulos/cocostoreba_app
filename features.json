@@ -26,7 +26,8 @@
         "Si falta una variable, el arranque falla con un mensaje claro",
         ".env.local está en .gitignore"
       ],
-      "passes": false
+      "passes": true,
+      "notes": "Verificado 2026-10-09 sin credenciales reales (env dummy por shell). Desde ahora npm run build/dev fallan a propósito hasta que exista .env.local."
     },
     {
       "id": "F03",
