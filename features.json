@@ -297,7 +297,8 @@
         "README explica cómo crear el proyecto Supabase, aplicar migraciones, crear el usuario y correr la app",
         "npm run build, npm run lint y npm test pasan"
       ],
-      "passes": false
+      "passes": true,
+      "notes": "Verificado 2026-10-10: loading/error/not-found + estados vacíos en todas las pantallas con listas; README con setup completo; build, lint y test pasan."
     }
   ]
 }

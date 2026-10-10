@@ -8,8 +8,8 @@ import { formatFecha } from "@/lib/dates";
 import { resolverFiltroFechas } from "@/lib/filtro-fechas";
 import { formatMoney, formatPercent } from "@/lib/money";
 import { type Kpis, medioLabel, variacion } from "@/lib/reportes/kpis";
-import { getDashboard } from "@/lib/reportes/queries";
-import { card, cx } from "@/lib/ui";
+import { ReportesError, getDashboard } from "@/lib/reportes/queries";
+import { card, cx, errorBox } from "@/lib/ui";
 
 function Panel({ titulo, children, className }: { titulo: string; children: React.ReactNode; className?: string }) {
   return (
@@ -28,7 +28,21 @@ export default async function DashboardPage({
   searchParams: Promise<{ desde?: string; hasta?: string }>;
 }) {
   const filtro = resolverFiltroFechas(await searchParams, "mes");
-  const d = await getDashboard(filtro.rango);
+  let d;
+  try {
+    d = await getDashboard(filtro.rango);
+  } catch (error) {
+    // En producción Next oculta el mensaje de los errores del servidor: el aviso se muestra acá.
+    if (!(error instanceof ReportesError)) throw error;
+    return (
+      <>
+        <PageHeader title="Dashboard" description={filtro.descripcion} />
+        <p role="alert" className={errorBox}>
+          {error.message}
+        </p>
+      </>
+    );
+  }
   const k = d.kpis;
   const v = (kpi: keyof Kpis) => variacion(kpi, k, d.kpisAnterior);
 
