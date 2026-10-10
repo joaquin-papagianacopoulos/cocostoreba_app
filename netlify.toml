@@ -3,3 +3,7 @@
 [build]
   command = "npm run build"
   publish = ".next"
+
+# Sin esto Netlify subía .next como archivos estáticos (0 functions) y todo daba 404.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
