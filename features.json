@@ -282,7 +282,8 @@
         "Los números coinciden con el historial de ventas y gastos del mismo período",
         "Legible en celular"
       ],
-      "passes": false
+      "passes": false,
+      "notes": "Implementado 2026-10-10. Render verificado con datos de prueba (375/1280, claro/oscuro). Falta: aplicar 0005_reportes.sql y comparar en pantalla contra ventas y gastos reales."
     },
     {
       "id": "F19",
