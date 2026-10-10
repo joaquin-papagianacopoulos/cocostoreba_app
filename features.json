@@ -236,7 +236,8 @@
         "Anular una venta la marca anulada y devuelve stock",
         "Reimprimir PDF desde el historial"
       ],
-      "passes": false
+      "passes": false,
+      "notes": "Implementado 2026-10-10. Filtro de fechas verificado (tests PGlite con venta 23:30 AR + navegador: URL y recarga). Falta: listado, anular y reimprimir contra la BD real."
     },
     {
       "id": "F16",
