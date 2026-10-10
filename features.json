@@ -121,7 +121,8 @@
         "Ajuste negativo con motivo resta stock",
         "El historial lista movimientos con tipo, cantidad, fecha y producto, filtrable por producto"
       ],
-      "passes": false
+      "passes": false,
+      "notes": "Implementado 2026-10-10 (build/tests OK; RPC probadas en PGlite). Falta verificar en navegador con sesión y BD real."
     },
     {
       "id": "F09",

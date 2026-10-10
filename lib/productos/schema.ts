@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { checkbox, intInput, moneyInput, optionalUuid } from "@/lib/forms";
+import { checkbox, intInput, moneyInput, optionalIntInput, optionalMoneyInput, optionalUuid } from "@/lib/forms";
 
 const base = {
   sku: z.string().trim().min(1, { error: "Ingresá el SKU" }).max(64, { error: "Máximo 64 caracteres" }),
@@ -23,8 +23,8 @@ export const productoUpdateSchema = z.object(base);
 /** Alta: además, costo inicial y stock inicial opcionales. */
 export const productoCreateSchema = z.object({
   ...base,
-  costo: moneyInput("Costo", { optional: true }).transform((v) => v ?? 0),
-  stock_inicial: intInput("Stock inicial", { min: 0, max: 1_000_000, optional: true }).transform((v) => v ?? 0),
+  costo: optionalMoneyInput("Costo").transform((v) => v ?? 0),
+  stock_inicial: optionalIntInput("Stock inicial", { min: 0, max: 1_000_000 }).transform((v) => v ?? 0),
 });
 
 export type ProductoCreateInput = z.infer<typeof productoCreateSchema>;

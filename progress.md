@@ -14,6 +14,12 @@ Formato:
 
 ---
 
+## 2026-10-10 — F08 Compras, ajustes e historial de movimientos
+- Hecho: /stock (historial con producto, tipo con badge de color, cantidad ±, fecha AR y motivo; filtros por producto y tipo vía ?producto&tipo; links desde /productos/[id]), /stock/compra (form multi-línea con ProductSelect filtrable, costo precargado con el costo actual, subtotales y total; RPC registrar_compra), /stock/ajuste (entra/sale, cantidad, motivo de lista + detalle, preview del stock resultante; RPC ajustar_stock). lib/stock/schema.ts (compraSchema con items JSON, ajusteSchema → cantidad con signo), lib/stock/actions.ts, lib/productos/queries.ts (getProductosActivos → ProductoOpcion con montos number), components/product-select.tsx. lib/forms.ts: moneyInput/intInput separados de optionalMoneyInput/optionalIntInput (los tipos opcionales contaminaban los obligatorios).
+- Verificado: npm test 74/74 (compra multi-ítem + total, validaciones por línea, ajuste negativo con motivo), tsc, lint, build. La lógica de stock/costo ya está probada en tests/db/rpc.test.ts (F04).
+- Pendiente / problemas: **sin verificar en navegador con BD real** (pedido del usuario: probar todo al final). passes=false.
+- Próximo paso sugerido: F09 (lib/pricing.ts).
+
 ## 2026-10-10 — F07 ABM de categorías y productos
 - Hecho: /productos (búsqueda por nombre/SKU/código de barras con ilike sanitizado, filtros "solo stock bajo" y "ver inactivos", filas con stock bajo resaltadas + badge, activar/desactivar), /productos/nuevo y /productos/[id] (ProductForm compartido; costo y stock solo lectura en edición; costo inicial y stock inicial en el alta — el stock inicial entra vía RPC ajustar_stock con motivo "Stock inicial"), /productos/categorias (crear, renombrar, borrar; los productos quedan sin categoría). lib/forms.ts (FormState, moneyInput/intInput con coma decimal, checkbox, optionalUuid), lib/db-errors.ts (23505 → "Ya existe un producto con ese SKU", etc.; P0001 pasa el mensaje de la RPC), lib/search.ts, lib/types.ts (filas de todas las tablas), components/action-form.tsx (evita el reset de React 19 al fallar).
 - Verificado: npm test 70/70 (schema, errores de duplicado, stock bajo, sanitización; nombres reales de constraints en PGlite), tsc, lint, build.

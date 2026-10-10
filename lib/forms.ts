@@ -27,30 +27,46 @@ export function invalid(error: z.ZodError): FormState {
 
 const toNumberInput = (v: unknown) => (typeof v === "string" ? v.trim().replace(",", ".") : v);
 
-/** Monto >= 0 desde un input (acepta coma decimal), redondeado a 2 decimales. */
-export function moneyInput(label: string, opts: { min?: number; optional?: boolean } = {}) {
-  const base = z
+/** "" / null / undefined → `empty`; si no, Number (acepta coma decimal). */
+const numberFromInput = (empty: undefined | number) => (v: unknown) => {
+  const s = toNumberInput(v);
+  if (s === "" || s === undefined || s === null) return empty;
+  return Number(s);
+};
+
+function moneyNumber(label: string, min: number) {
+  return z
     .number({ error: `${label}: ingresá un número` })
-    .min(opts.min ?? 0, { error: `${label} no puede ser menor a ${opts.min ?? 0}` })
+    .min(min, { error: `${label} no puede ser menor a ${min}` })
     .max(9_999_999_999, { error: `${label} es demasiado grande` })
     .transform(round2);
-  return z.preprocess((v) => {
-    const s = toNumberInput(v);
-    if (s === "" || s === undefined || s === null) return opts.optional ? undefined : Number.NaN;
-    return Number(s);
-  }, opts.optional ? base.optional() : base);
 }
 
-/** Entero desde un input. */
-export function intInput(label: string, opts: { min?: number; max?: number; optional?: boolean } = {}) {
+function intNumber(label: string, opts: { min?: number; max?: number }) {
   let base = z.number({ error: `${label}: ingresá un número entero` }).int({ error: `${label} tiene que ser entero` });
   if (opts.min !== undefined) base = base.min(opts.min, { error: `${label} no puede ser menor a ${opts.min}` });
   if (opts.max !== undefined) base = base.max(opts.max, { error: `${label} no puede ser mayor a ${opts.max}` });
-  return z.preprocess((v) => {
-    const s = toNumberInput(v);
-    if (s === "" || s === undefined || s === null) return opts.optional ? undefined : Number.NaN;
-    return Number(s);
-  }, opts.optional ? base.optional() : base);
+  return base;
+}
+
+/** Monto obligatorio >= min desde un input (acepta coma decimal), redondeado a 2 decimales. */
+export function moneyInput(label: string, opts: { min?: number } = {}) {
+  return z.preprocess(numberFromInput(Number.NaN), moneyNumber(label, opts.min ?? 0));
+}
+
+/** Monto opcional: vacío → undefined. */
+export function optionalMoneyInput(label: string, opts: { min?: number } = {}) {
+  return z.preprocess(numberFromInput(undefined), moneyNumber(label, opts.min ?? 0).optional());
+}
+
+/** Entero obligatorio desde un input. */
+export function intInput(label: string, opts: { min?: number; max?: number } = {}) {
+  return z.preprocess(numberFromInput(Number.NaN), intNumber(label, opts));
+}
+
+/** Entero opcional: vacío → undefined. */
+export function optionalIntInput(label: string, opts: { min?: number; max?: number } = {}) {
+  return z.preprocess(numberFromInput(undefined), intNumber(label, opts).optional());
 }
 
 /** Texto opcional: vacío → null. */
