@@ -153,7 +153,8 @@
         "Activar/desactivar una promo",
         "Validaciones: nxm requiere n > m >= 1; porcentaje entre 0 y 100"
       ],
-      "passes": false
+      "passes": false,
+      "notes": "Implementado 2026-10-10 (validaciones verificadas con tests). Falta verificar en navegador con sesión y BD real."
     },
     {
       "id": "F11",

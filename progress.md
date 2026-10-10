@@ -14,6 +14,12 @@ Formato:
 
 ---
 
+## 2026-10-10 — F10 ABM de promociones
+- Hecho: /promociones (lista con descripción "2x1"/"15 % off", alcance con nombre de producto/categoría, canal, vigencia, estado activa/inactiva/programada/vencida, activar/desactivar), /promociones/nueva y /promociones/[id] (PromoForm: campos según tipo — valor o n/m — y según alcance — producto con ProductSelect o categoría —, canal, fechas, activa; borrar en edición). lib/promociones/schema.ts replica los checks SQL (porcentaje 0<v≤100, monto>0, nxm n>m≥1, alcance coherente, desde≤hasta) y normaliza a fila (campos que no aplican → null). estadoPromo().
+- Verificado: tests/promociones.test.ts (los 3 tipos × 3 alcances, validaciones de verify, estados). npm test 97/97, tsc, lint, build.
+- Pendiente / problemas: **sin verificar en navegador con BD real** (crear/activar/desactivar en pantalla). passes=false.
+- Próximo paso sugerido: F11 (POS).
+
 ## 2026-10-10 — F09 lib/pricing.ts
 - Hecho: precioBase por canal, promoAplica (activa, canal o "ambos", fechas inclusivas YYYY-MM-DD AR, alcance producto/categoría/todo), descuentoDePromo (porcentaje acotado 0–100, monto_fijo por unidad sin precio negativo, nxm por grupos completos; nunca más que el bruto), calcularLinea (mayor descuento, sin acumular; precio manual opcional para mayorista), montoDescuentoGeneral (monto o %, entre 0 y subtotal), calcularVenta (subtotal = Σ totales de línea, descuentoItems, descuentoGeneral, total), describirPromo. Todo redondeado con lib/money.
 - Verificado: tests/pricing.test.ts 15 tests (2x1 con 5 → cobra 3; dos promos → la de mayor descuento; fuera de fecha / otro canal / inactiva / otra categoría no aplica; monto_fijo no deja negativo; totales a 2 decimales). npm test 89/89, tsc, lint, build.
