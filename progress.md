@@ -14,6 +14,12 @@ Formato:
 
 ---
 
+## 2026-10-10 — F16 Gastos con comprobante adjunto
+- Hecho: /gastos (mismo DateRangeFilter que ventas, por defecto "Este mes"; gastos.fecha es date → se filtra con desde/hasta sin pasar a UTC; filtro por categoría; total del período; link "Ver adjunto"), /gastos/nuevo y /gastos/[id] (GastoForm: fecha por defecto hoy AR, categoría, monto, descripción, adjunto jpg/png/pdf ≤ 5 MB con chequeo en el navegador y en el servidor, quitar/reemplazar adjunto, borrar). lib/gastos/actions.ts: sube a bucket privado `comprobantes/gastos/<uuid>.<ext>`, si falla el insert borra el archivo; al reemplazar borra el viejo después de guardar; al borrar el gasto borra el archivo. /gastos/[id]/comprobante: redirige a signed URL de 60 s.
+- Verificado: tests/gastos.test.ts (schema, tipos y tamaño de adjunto), npm test 127/127, tsc, lint, build.
+- Pendiente / problemas: necesita 0003_storage.sql aplicada. Subida/visualización/borrado de archivos contra Supabase Storage sin probar. passes=false.
+- Próximo paso sugerido: F17 (funciones SQL de reportes).
+
 ## 2026-10-10 — F15 Historial de ventas con filtro de fechas
 - Hecho: components/date-range-filter.tsx (Hoy / Esta semana / Este mes / Rango con dos date pickers; escribe ?desde&hasta conservando otros params; los presets vienen del servidor en hora AR; valida rango invertido) + lib/filtro-fechas.ts (resolverFiltroFechas: rango, preset activo, UTC [desde, hasta), descripción). /ventas: confirmadas/entregadas/anuladas del período (sin borradores), filtro por canal, resumen cantidad y total sin anuladas, anuladas tachadas. /ventas/[id]: detalle (VentaItemsTable) + Anular (devuelve stock, pide motivo) + Reimprimir PDF + Entregar si es pedido confirmado.
 - Verificado: tests/db/ventas-fechas.test.ts (venta 23:30 AR entra en "Hoy" del 9/10 y no en el 10/10; rango inclusivo; sin borradores; params inválidos → preset). npm test 122/122, tsc, lint, build. Filtro probado en Edge a 375px con página temporal (borrada): los 4 filtros escriben la URL, recargar mantiene el filtro, rango invertido da error, otros params se conservan, UTC correcto.

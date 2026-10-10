@@ -252,7 +252,8 @@
         "Borrar el gasto borra también el archivo",
         "Filtro de fechas reutiliza el mismo componente que ventas"
       ],
-      "passes": false
+      "passes": false,
+      "notes": "Implementado 2026-10-10 (validaciones con tests). Falta: aplicar 0003_storage.sql y probar subir/ver/borrar adjuntos con Supabase Storage real."
     },
     {
       "id": "F17",
