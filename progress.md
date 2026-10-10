@@ -14,6 +14,12 @@ Formato:
 
 ---
 
+## 2026-10-10 — F13 ABM de clientes mayoristas
+- Hecho: /clientes (búsqueda por nombre/CUIT/teléfono/email), /clientes/nuevo, /clientes/[id] (ClienteForm compartido; borrar con error legible si tiene pedidos — FK ventas_cliente_id_fkey; link "Ver pedidos" → /pedidos?cliente=). lib/clientes/schema.ts (vacíos → null, email y CUIT validados) y actions.ts.
+- Verificado: tests/clientes.test.ts, npm test 114/114, tsc, lint, build.
+- Pendiente / problemas: **sin verificar en navegador con BD real** (crear/editar/buscar). passes=false.
+- Próximo paso sugerido: F14 (pedidos mayoristas).
+
 ## 2026-10-10 — F12 Configuración del negocio y comprobante PDF
 - Hecho: migración 0003_storage.sql (buckets privados `negocio` 1 MB png/jpg y `comprobantes` 5 MB png/jpg/pdf; 4 políticas en storage.objects solo authenticated). /configuracion (nombre, CUIT, dirección, teléfono, pie, logo con preview por signed URL, quitar logo; Server Action valida tipo/tamaño, sube el nuevo y borra el viejo recién después de guardar). Comprobante: lib/comprobante/data.ts (buildComprobante: nro 8 dígitos, fecha AR, ítems con descuento, importe, descuentos por promo y general, total, medio de pago, leyenda, título según canal/estado, cliente) + lib/comprobante/pdf.tsx (@react-pdf/renderer, A4, logo, marca ANULADO, leyenda arriba y en el pie) + lib/comprobante/queries.ts + ruta /ventas/[id]/pdf (inline o ?descargar=1). El POS ya linkea al PDF al cobrar. lib/files.ts (validarArchivo). next.config: serverExternalPackages react-pdf, bodySizeLimit 6mb. Tests: stub de server-only y JSX automático en vitest; stub del esquema storage en el preludio de PGlite.
 - Verificado: npm test 111/111 (buildComprobante, PDF válido, validarArchivo, buckets/políticas en PGlite), tsc, lint, build. PDF de ejemplo revisado visualmente (nro, ítems, descuentos, total, medio de pago, leyenda). react-pdf probado dentro del dev server de Next con una ruta temporal (borrada): 200 application/pdf, Ñ y marca ANULADO OK.

@@ -201,7 +201,8 @@
       "verify": [
         "Crear, editar y buscar clientes"
       ],
-      "passes": false
+      "passes": false,
+      "notes": "Implementado 2026-10-10 (build/tests OK). Falta verificar en navegador con sesión y BD real."
     },
     {
       "id": "F14",
