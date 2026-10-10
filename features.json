@@ -219,7 +219,8 @@
         "Lista de pedidos filtrable por estado",
         "Descargar PDF del pedido"
       ],
-      "passes": false
+      "passes": false,
+      "notes": "Implementado 2026-10-10. Flujo verificado en PGlite (tests/db/pedidos.test.ts) y editor en navegador con datos de prueba. Falta: aplicar 0004_pedidos.sql y probar el flujo completo con la BD real."
     },
     {
       "id": "F15",

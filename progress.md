@@ -14,6 +14,12 @@ Formato:
 
 ---
 
+## 2026-10-10 — F14 Pedidos mayoristas
+- Hecho: migración 0004_pedidos.sql: guardar_pedido (security invoker → los triggers de 0002 siguen protegiendo; crea o reemplaza borrador + ítems en una transacción, valida cliente/ítems/descuentos, calcula totales en SQL, no toca stock) y marcar_entregado (definer, solo confirmado → entregado). App: lib/pedidos/actions.ts (guardarPedido recalcula con armarVenta canal mayorista; confirmarPedido → confirmar_venta; entregarPedido; anularVenta → anular_venta con motivo), lib/ventas/queries.ts (getVentaDetalle), lib/ventas/estado.ts (labels, estilos, accionesPedido), components/venta-items-table.tsx y venta-acciones.tsx (reutilizables en /ventas). Pantallas: /pedidos (filtro por estado con chips + ?cliente), /pedidos/nuevo, /pedidos/[id] (borrador → editor + Confirmar/Anular/PDF; confirmado → detalle + Entregar/Anular/PDF). PedidoEditor: cliente, líneas con precio mayorista precargado y editable, promos del canal mayorista, descuento general, medio de pago opcional, notas.
+- Verificado: tests/db/pedidos.test.ts (borrador no toca stock; edición reemplaza ítems; confirmar descuenta y numera; no se editan ítems confirmados; entregar solo desde confirmado; anular confirmado devuelve stock; validaciones). npm test 119/119, tsc, lint, build. Editor probado en Edge a 375px con datos de prueba (precio mayorista precargado, promo mayorista visible, total 21.850,50 correcto, error de guardado visible).
+- Pendiente / problemas: **el usuario tiene que aplicar 0004_pedidos.sql**; flujo completo contra Supabase sin probar. passes=false.
+- Próximo paso sugerido: F15 (historial de ventas).
+
 ## 2026-10-10 — F13 ABM de clientes mayoristas
 - Hecho: /clientes (búsqueda por nombre/CUIT/teléfono/email), /clientes/nuevo, /clientes/[id] (ClienteForm compartido; borrar con error legible si tiene pedidos — FK ventas_cliente_id_fkey; link "Ver pedidos" → /pedidos?cliente=). lib/clientes/schema.ts (vacíos → null, email y CUIT validados) y actions.ts.
 - Verificado: tests/clientes.test.ts, npm test 114/114, tsc, lint, build.
