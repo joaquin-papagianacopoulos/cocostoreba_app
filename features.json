@@ -58,7 +58,8 @@
         "anular_venta devuelve el stock y crea movimientos 'anulacion'",
         "registrar_compra recalcula el costo promedio ponderado correctamente (probar con 2 compras a distinto costo)"
       ],
-      "passes": false
+      "passes": true,
+      "notes": "Verificado 2026-10-10: los 4 pasos con tests/db/rpc.test.ts (PGlite, ejecutando como authenticated). Aplicada por el usuario en Supabase: 5 funciones security definer, 2 triggers, check de ventas actualizado."
     },
     {
       "id": "F05",
