@@ -73,7 +73,8 @@
         "Login correcto lleva al dashboard; incorrecto muestra error",
         "Logout vuelve a /login"
       ],
-      "passes": false
+      "passes": true,
+      "notes": "Verificado 2026-10-10: redirecciones sin sesión y login incorrecto por subagente verificador (Edge headless) + curl; login correcto → dashboard y logout → /login confirmados manualmente por el usuario con su cuenta real."
     },
     {
       "id": "F06",
