@@ -14,6 +14,11 @@ Formato:
 
 ---
 
+## 2026-10-10 — F09 lib/pricing.ts
+- Hecho: precioBase por canal, promoAplica (activa, canal o "ambos", fechas inclusivas YYYY-MM-DD AR, alcance producto/categoría/todo), descuentoDePromo (porcentaje acotado 0–100, monto_fijo por unidad sin precio negativo, nxm por grupos completos; nunca más que el bruto), calcularLinea (mayor descuento, sin acumular; precio manual opcional para mayorista), montoDescuentoGeneral (monto o %, entre 0 y subtotal), calcularVenta (subtotal = Σ totales de línea, descuentoItems, descuentoGeneral, total), describirPromo. Todo redondeado con lib/money.
+- Verificado: tests/pricing.test.ts 15 tests (2x1 con 5 → cobra 3; dos promos → la de mayor descuento; fuera de fecha / otro canal / inactiva / otra categoría no aplica; monto_fijo no deja negativo; totales a 2 decimales). npm test 89/89, tsc, lint, build.
+- Próximo paso sugerido: F10 (ABM de promociones).
+
 ## 2026-10-10 — F08 Compras, ajustes e historial de movimientos
 - Hecho: /stock (historial con producto, tipo con badge de color, cantidad ±, fecha AR y motivo; filtros por producto y tipo vía ?producto&tipo; links desde /productos/[id]), /stock/compra (form multi-línea con ProductSelect filtrable, costo precargado con el costo actual, subtotales y total; RPC registrar_compra), /stock/ajuste (entra/sale, cantidad, motivo de lista + detalle, preview del stock resultante; RPC ajustar_stock). lib/stock/schema.ts (compraSchema con items JSON, ajusteSchema → cantidad con signo), lib/stock/actions.ts, lib/productos/queries.ts (getProductosActivos → ProductoOpcion con montos number), components/product-select.tsx. lib/forms.ts: moneyInput/intInput separados de optionalMoneyInput/optionalIntInput (los tipos opcionales contaminaban los obligatorios).
 - Verificado: npm test 74/74 (compra multi-ítem + total, validaciones por línea, ajuste negativo con motivo), tsc, lint, build. La lógica de stock/costo ya está probada en tests/db/rpc.test.ts (F04).

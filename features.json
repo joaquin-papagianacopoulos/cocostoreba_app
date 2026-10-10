@@ -137,7 +137,8 @@
         "Tests: promo fuera de fecha o de otro canal no aplica",
         "Tests: monto_fijo no deja precio negativo; totales redondeados a 2 decimales"
       ],
-      "passes": false
+      "passes": true,
+      "notes": "Verificado 2026-10-10: los 4 pasos con tests/pricing.test.ts."
     },
     {
       "id": "F10",
