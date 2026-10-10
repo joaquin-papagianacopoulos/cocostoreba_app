@@ -13,6 +13,13 @@ try {
   process.exit(1);
 }
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  // react-pdf usa APIs de Node: se carga tal cual en el servidor, sin bundlear.
+  serverExternalPackages: ["@react-pdf/renderer"],
+  experimental: {
+    // Adjuntos de gastos (máx 5 MB) y logo (máx 1 MB) viajan por Server Actions.
+    serverActions: { bodySizeLimit: "6mb" },
+  },
+};
 
 export default nextConfig;

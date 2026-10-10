@@ -96,6 +96,21 @@ describe("migraciones", () => {
     await expect(db.exec("insert into categorias (nombre) values ('Líquidos')")).rejects.toThrow(/categorias_nombre_key/);
   });
 
+  it("crea los buckets privados con políticas solo para authenticated", async () => {
+    const buckets = await db.query<{ id: string; public: boolean; file_size_limit: string }>(
+      "select id, public, file_size_limit from storage.buckets order by id",
+    );
+    expect(buckets.rows.map((b) => [b.id, b.public, Number(b.file_size_limit)])).toEqual([
+      ["comprobantes", false, 5 * 1024 * 1024],
+      ["negocio", false, 1024 * 1024],
+    ]);
+    const { rows } = await db.query<{ roles: string[] }>(
+      "select roles from pg_policies where schemaname = 'storage' and tablename = 'objects'",
+    );
+    expect(rows).toHaveLength(4);
+    for (const r of rows) expect(r.roles).toEqual(["authenticated"]);
+  });
+
   it("venta mayorista exige cliente", async () => {
     await expect(db.exec("insert into ventas (canal) values ('mayorista')")).rejects.toThrow(
       /ventas_mayorista_cliente_check/,

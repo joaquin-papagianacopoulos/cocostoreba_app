@@ -187,7 +187,8 @@
         "Al cobrar en el POS se puede descargar/imprimir el PDF",
         "El PDF muestra nro correlativo, ítems, descuentos, total, medio de pago y la leyenda 'Comprobante no válido como factura'"
       ],
-      "passes": false
+      "passes": false,
+      "notes": "Implementado 2026-10-10. PDF verificado visualmente con datos de prueba (también dentro de Next). Falta: aplicar 0003_storage.sql y probar guardar configuración/logo y descargar el PDF de una venta real."
     },
     {
       "id": "F13",
