@@ -84,6 +84,18 @@ describe("migraciones", () => {
     await expect(promo("valor) values ('mal', 'producto', 'porcentaje', 10")).rejects.toThrow(/promo_alcance_check/);
   });
 
+  it("los nombres de constraints únicas coinciden con lib/db-errors", async () => {
+    await db.exec("insert into productos (sku, codigo_barras, nombre) values ('DUP', '779', 'a')");
+    await expect(db.exec("insert into productos (sku, nombre) values ('DUP', 'b')")).rejects.toThrow(
+      /productos_sku_key/,
+    );
+    await expect(db.exec("insert into productos (sku, codigo_barras, nombre) values ('X1', '779', 'b')")).rejects.toThrow(
+      /productos_codigo_barras_key/,
+    );
+    await db.exec("insert into categorias (nombre) values ('Líquidos')");
+    await expect(db.exec("insert into categorias (nombre) values ('Líquidos')")).rejects.toThrow(/categorias_nombre_key/);
+  });
+
   it("venta mayorista exige cliente", async () => {
     await expect(db.exec("insert into ventas (canal) values ('mayorista')")).rejects.toThrow(
       /ventas_mayorista_cliente_check/,

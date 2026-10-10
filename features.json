@@ -105,7 +105,8 @@
         "Productos con stock <= stock_minimo se marcan visualmente",
         "Buscar por nombre o SKU filtra la lista"
       ],
-      "passes": false
+      "passes": false,
+      "notes": "Implementado 2026-10-10 (build/tests OK). Falta verificar en navegador con sesión y BD real: el usuario pidió terminar la app y probar todo junto al final."
     },
     {
       "id": "F08",

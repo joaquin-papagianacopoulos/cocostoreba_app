@@ -14,6 +14,12 @@ Formato:
 
 ---
 
+## 2026-10-10 — F07 ABM de categorías y productos
+- Hecho: /productos (búsqueda por nombre/SKU/código de barras con ilike sanitizado, filtros "solo stock bajo" y "ver inactivos", filas con stock bajo resaltadas + badge, activar/desactivar), /productos/nuevo y /productos/[id] (ProductForm compartido; costo y stock solo lectura en edición; costo inicial y stock inicial en el alta — el stock inicial entra vía RPC ajustar_stock con motivo "Stock inicial"), /productos/categorias (crear, renombrar, borrar; los productos quedan sin categoría). lib/forms.ts (FormState, moneyInput/intInput con coma decimal, checkbox, optionalUuid), lib/db-errors.ts (23505 → "Ya existe un producto con ese SKU", etc.; P0001 pasa el mensaje de la RPC), lib/search.ts, lib/types.ts (filas de todas las tablas), components/action-form.tsx (evita el reset de React 19 al fallar).
+- Verificado: npm test 70/70 (schema, errores de duplicado, stock bajo, sanitización; nombres reales de constraints en PGlite), tsc, lint, build.
+- Pendiente / problemas: **sin verificar en navegador** (crear/editar/desactivar, duplicados en pantalla, marca visual, búsqueda): el agente no tiene sesión y el usuario pidió terminar la app y probar con la BD al final. passes=false hasta esa prueba.
+- Próximo paso sugerido: F08 (compras, ajustes, historial).
+
 ## 2026-10-10 — F06 Layout, navegación, money.ts y dates.ts
 - Hecho: lib/money.ts (round2 sin errores de float vía toPrecision, parseMoney, sumMoney, multiplyMoney, formatMoney es-AR, formatPercent). lib/dates.ts (todayAR, rangos hoy/semana-desde-lunes/mes "hasta hoy", rangoAnterior de igual duración, rangoAUtc [desde, hasta) con date-fns-tz, parseRango de ?desde&hasta, formatFecha/formatFechaHora en hora AR). Grupo app/(app) con layout: sidebar desktop + barra y menú desplegable mobile (components/app-nav.tsx, lib/nav.ts). lib/ui.ts con clases compartidas; components/page-header.tsx (PageHeader, EmptyState). Placeholders de las 9 rutas de SPEC §2.
 - Decisión: "Esta semana" y "Este mes" van hasta hoy (no hasta fin de período) para que la comparación con el período anterior de igual duración (F18) sea justa.
