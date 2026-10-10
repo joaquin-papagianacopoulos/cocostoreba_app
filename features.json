@@ -88,7 +88,8 @@
         "Usable a 375px de ancho sin scroll horizontal",
         "Tests de money.ts (formato ARS, redondeo) y dates.ts (hoy/semana/mes en hora Argentina, semana desde lunes) pasan"
       ],
-      "passes": false
+      "passes": true,
+      "notes": "Verificado 2026-10-10: tests money/dates/nav; navegación revisada en Edge headless a 375 y 1280px abriendo temporalmente el middleware en la copia local (revertido, no commiteado), porque el agente no tiene usuario para loguearse."
     },
     {
       "id": "F07",

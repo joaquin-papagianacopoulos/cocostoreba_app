@@ -14,6 +14,13 @@ Formato:
 
 ---
 
+## 2026-10-10 — F06 Layout, navegación, money.ts y dates.ts
+- Hecho: lib/money.ts (round2 sin errores de float vía toPrecision, parseMoney, sumMoney, multiplyMoney, formatMoney es-AR, formatPercent). lib/dates.ts (todayAR, rangos hoy/semana-desde-lunes/mes "hasta hoy", rangoAnterior de igual duración, rangoAUtc [desde, hasta) con date-fns-tz, parseRango de ?desde&hasta, formatFecha/formatFechaHora en hora AR). Grupo app/(app) con layout: sidebar desktop + barra y menú desplegable mobile (components/app-nav.tsx, lib/nav.ts). lib/ui.ts con clases compartidas; components/page-header.tsx (PageHeader, EmptyState). Placeholders de las 9 rutas de SPEC §2.
+- Decisión: "Esta semana" y "Este mes" van hasta hoy (no hasta fin de período) para que la comparación con el período anterior de igual duración (F18) sea justa.
+- Verificado: npm test 61/61 (incluye 23:30 AR = mismo día, domingo 23:30 AR sigue en la semana, 1.005 → 1,01, formato "$ 1.234.567,50"), tsc, lint, build. Navegador (Edge headless, middleware abierto temporalmente solo en local): 10 rutas OK a 375 y 1280 sin scroll horizontal, menú mobile navega y se cierra, sidebar navega, consola limpia.
+- Pendiente / problemas: el usuario pidió terminar toda la app y aplicar la BD al final → desde F07 las pantallas con datos se verifican con build/tests/PGlite; la prueba real en navegador queda para el final con su BD. Ojo: en :3000 había un dev server viejo (PID 25520) — el agente usa :3100.
+- Próximo paso sugerido: F07 (productos y categorías).
+
 ## 2026-10-10 — F05 Login, middleware y logout
 - Hecho: middleware.ts (@supabase/ssr, getClaims refresca sesión; sin sesión → /login?next=<ruta>, con sesión /login → next o /). lib/auth/actions.ts (Server Actions login con Zod + signInWithPassword, errores mapeados a español; logout → signOut + redirect /login). lib/auth/redirect.ts safeNextPath (anti open-redirect) + tests. app/login (page + form con useActionState). components/logout-button.tsx. app/page.tsx placeholder de dashboard con email y botón Salir.
 - Verificado: npm test 39/39, tsc, lint, build OK. curl: /, /ventas, /pos?x=1, /api/algo → 307 a /login con next. Verificador (Edge headless): credenciales incorrectas muestran "Email o contraseña incorrectos" sin redirigir y conservan el email; email inválido bloqueado; consola limpia; 375px sin scroll horizontal. Login correcto y logout: confirmados por el usuario con su cuenta.
