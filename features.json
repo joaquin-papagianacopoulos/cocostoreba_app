@@ -172,7 +172,8 @@
         "Cobrar crea la venta confirmada y descuenta stock; si falta stock muestra error y no cobra",
         "Usable en celular (375px)"
       ],
-      "passes": false
+      "passes": false,
+      "notes": "Implementado 2026-10-10. Verificado: tests + integración PGlite (totales app = BD) + UI en navegador con datos de prueba (búsqueda, Enter, promos, descuento, 375px). Falta: cobro real contra Supabase con sesión."
     },
     {
       "id": "F12",

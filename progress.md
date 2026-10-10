@@ -14,6 +14,12 @@ Formato:
 
 ---
 
+## 2026-10-10 — F11 Punto de venta minorista
+- Hecho: /pos (server: productos activos + promos activas + fecha AR) con componente cliente Pos: buscador con sugerencias (nombre/SKU/código, sin acentos), Enter con código exacto (barras o SKU) agrega directo; un código numérico que no coincide exacto NO agrega por coincidencia parcial (bug encontrado en la prueba: "000" agregaba "5000 puffs"). Carrito con −/+/cantidad, promo y descuento por línea, aviso de stock insuficiente; descuento general $ o %; medio de pago; totales en vivo con lib/pricing. Cobrar → Server Action cobrarVenta: valida con Zod, relee productos y promos de la base y recalcula con armarVenta (lib/ventas/build.ts, no confía en el cliente), RPC crear_venta_minorista; errores (stock, etc.) se muestran y el carrito no se vacía. Al cobrar muestra nro + total + link al comprobante (/ventas/[id]/pdf, F12). lib/pos/search.ts, lib/promociones/queries.ts, lib/ui.ts inputBase.
+- Verificado: npm test (pos: búsqueda, esCodigo, armarVenta agrupa/recalcula/rechaza inactivos; tests/db/pos-integration: totales de la app = totales guardados por la RPC, costo congelado), tsc, lint, build. Navegador (Edge headless, 375 y 1280, con productos de prueba inyectados solo en local y middleware abierto temporalmente, ambos revertidos): búsqueda+click, código de barras+Enter, SKU+Enter, código inexistente avisa, 2x1 visible en el carrito, 10 % de descuento da los montos correctos, pide medio de pago, cobro fallido muestra error y no vacía, sin scroll horizontal, consola limpia.
+- Pendiente / problemas: **cobro real contra Supabase sin probar** (descuenta stock / error de stock en pantalla). passes=false hasta la prueba final con la BD del usuario.
+- Próximo paso sugerido: F12 (configuración + PDF).
+
 ## 2026-10-10 — F10 ABM de promociones
 - Hecho: /promociones (lista con descripción "2x1"/"15 % off", alcance con nombre de producto/categoría, canal, vigencia, estado activa/inactiva/programada/vencida, activar/desactivar), /promociones/nueva y /promociones/[id] (PromoForm: campos según tipo — valor o n/m — y según alcance — producto con ProductSelect o categoría —, canal, fechas, activa; borrar en edición). lib/promociones/schema.ts replica los checks SQL (porcentaje 0<v≤100, monto>0, nxm n>m≥1, alcance coherente, desde≤hasta) y normaliza a fila (campos que no aplican → null). estadoPromo().
 - Verificado: tests/promociones.test.ts (los 3 tipos × 3 alcances, validaciones de verify, estados). npm test 97/97, tsc, lint, build.
