@@ -42,7 +42,8 @@
         "Seed de categorias_gasto y fila única de configuracion",
         "La migración se aplica sin errores sobre una base vacía"
       ],
-      "passes": false
+      "passes": true,
+      "notes": "Verificado 2026-10-10: aplicada a mano por el usuario en el SQL Editor de su Supabase; chequeo dio tablas 12, sin RLS 0, políticas 12, categorias_gasto 7, configuracion 1. Además tests/db/migrations.test.ts aplica las migraciones sobre PGlite vacío."
     },
     {
       "id": "F04",

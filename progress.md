@@ -14,6 +14,12 @@ Formato:
 
 ---
 
+## 2026-10-10 — F03 Migración inicial: tablas, enums, RLS y seeds
+- Hecho: supabase/migrations/0001_inicial.sql con las 12 tablas de SPEC §3, enums, FKs, índices, checks (promo nxm n>m>=1, porcentaje 0–100, alcance coherente, mayorista con cliente, confirmada con numero+fecha), RLS + política for all solo authenticated, seeds (7 categorias_gasto, configuracion id=1). Privilegios: anon sin acceso; authenticated no puede escribir productos.stock/costo (grants por columna), movimientos_stock, compras/compra_items ni la secuencia de numero → solo las RPC de F04 (que van a tener que ser security definer). ventas.numero es nullable + ventas_numero_seq: se asigna al confirmar (desvío deliberado del "serial" de la spec, por F14). Tests con PGlite (@electric-sql/pglite, dev dep): tests/db/db.ts crea una base vacía con preludio de roles Supabase y aplica todas las migraciones en orden.
+- Verificado: npm test 19/19 (13 de migración: tablas, RLS, políticas, seeds, numeric(12,2), checks, privilegios de authenticated/anon). tsc, lint, build OK. El usuario la aplicó en su Supabase vía SQL Editor y el chequeo coincidió (12/0/12/7/1).
+- Pendiente / problemas: el usuario eligió aplicar migraciones pegando el SQL a mano → cada migración nueva necesita que la corra él. Storage (buckets comprobantes/logo) queda para F12/F16. Sin guardas todavía sobre transiciones de ventas.estado hechas desde el cliente (evaluar en F04/F14).
+- Próximo paso sugerido: F04 (RPC). Probarlas con PGlite antes de pasarle el SQL al usuario.
+
 ## 2026-10-09 — F02 Cliente Supabase, env validado con Zod y .env.example
 - Hecho: @supabase/ssr + supabase-js + zod 4 + server-only. lib/env-schema.ts (parseEnv con mensajes en español), lib/env.ts (env validado para la app), lib/supabase/server.ts (createServerClient con cookies de next/headers, server-only) y lib/supabase/client.ts (createBrowserClient). next.config.ts valida el env al arrancar e imprime el error + process.exit(1), porque `next dev` se tragaba el mensaje si solo se tiraba la excepción. .env.example. tests/env.test.ts (5 tests).
 - Verificado: build y dev SIN env salen con exit 1 listando las variables faltantes; URL inválida da mensaje específico; con env (por shell o .env.local temporal) build OK y dev sirve la página. .env.local ignorado por git (.gitignore:4). npm test (6), tsc, lint OK.
