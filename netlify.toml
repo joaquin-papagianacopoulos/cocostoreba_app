@@ -1,0 +1,5 @@
+# Netlify detecta Next.js y usa su runtime (OpenNext): no subir .next a mano.
+# Las variables NEXT_PUBLIC_SUPABASE_* se cargan en Site configuration → Environment variables.
+[build]
+  command = "npm run build"
+  publish = ".next"
