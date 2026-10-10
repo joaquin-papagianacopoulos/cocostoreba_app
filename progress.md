@@ -14,6 +14,12 @@ Formato:
 
 ---
 
+## 2026-10-10 — F17 Funciones SQL de reportes
+- Hecho: migración 0005_reportes.sql. Reciben p_desde/p_hasta como fechas locales AR inclusivas y las convierten a [desde, hasta) con `at time zone 'America/Argentina/Buenos_Aires'`; solo ventas confirmado/entregado. Helpers reporte_rango_utc, reporte_ventas, reporte_lineas (descuento general prorrateado por línea para que los desgloses sumen las ventas netas). reporte_kpis = **única definición de ganancia neta** (ventas netas − CMV − gastos) + descuentos (ítems + general), margen, cantidad, ticket, valor del stock. reporte_series (día, o semana desde lunes si > 62 días; rellena períodos vacíos), reporte_top_productos (ganancia | unidades), reporte_por_categoria, reporte_por_canal, reporte_por_medio_pago, reporte_gastos_por_categoria, productos_stock_bajo. security invoker (RLS), execute solo authenticated.
+- Verificado: tests/db/reportes.test.ts con datos conocidos calculados a mano (comentario en el test): ventas netas 474, descuentos 36, CMV 250, ganancia bruta 224, margen 0,4726, gastos 70,50, ganancia neta 153,50, ticket 158, valor stock 825; excluye anulada, borrador y fuera de rango; venta 23:30 AR en su día; series diaria y semanal; top, categorías (suman 474), canal, medio de pago, gastos por categoría, stock bajo; anon sin acceso. npm test 137/137.
+- Pendiente / problemas: el usuario tiene que aplicar 0005_reportes.sql (los pasos de verify están cubiertos por los tests en PGlite).
+- Próximo paso sugerido: F18 (dashboard).
+
 ## 2026-10-10 — F16 Gastos con comprobante adjunto
 - Hecho: /gastos (mismo DateRangeFilter que ventas, por defecto "Este mes"; gastos.fecha es date → se filtra con desde/hasta sin pasar a UTC; filtro por categoría; total del período; link "Ver adjunto"), /gastos/nuevo y /gastos/[id] (GastoForm: fecha por defecto hoy AR, categoría, monto, descripción, adjunto jpg/png/pdf ≤ 5 MB con chequeo en el navegador y en el servidor, quitar/reemplazar adjunto, borrar). lib/gastos/actions.ts: sube a bucket privado `comprobantes/gastos/<uuid>.<ext>`, si falla el insert borra el archivo; al reemplazar borra el viejo después de guardar; al borrar el gasto borra el archivo. /gastos/[id]/comprobante: redirige a signed URL de 60 s.
 - Verificado: tests/gastos.test.ts (schema, tipos y tamaño de adjunto), npm test 127/127, tsc, lint, build.

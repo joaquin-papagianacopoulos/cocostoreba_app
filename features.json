@@ -266,7 +266,8 @@
         "Reciben desde/hasta y excluyen ventas anuladas y borradores",
         "Con datos de prueba conocidos, ventas netas, CMV, ganancia bruta, gastos y ganancia neta dan los valores esperados (calcular a mano y comparar)"
       ],
-      "passes": false
+      "passes": true,
+      "notes": "Verificado 2026-10-10 con tests/db/reportes.test.ts (PGlite, datos conocidos calculados a mano). Pendiente que el usuario aplique 0005_reportes.sql en Supabase."
     },
     {
       "id": "F18",
