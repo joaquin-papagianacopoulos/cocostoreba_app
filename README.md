@@ -29,6 +29,7 @@ vez cada una:
 | `0003_storage.sql` | Buckets privados `negocio` (logo) y `comprobantes` (adjuntos de gastos) |
 | `0004_pedidos.sql` | Funciones para guardar pedidos mayoristas y marcarlos entregados |
 | `0005_reportes.sql` | Funciones de reportes del dashboard |
+| `0006_importar_productos.sql` | Carga masiva de productos desde Excel |
 
 **Opción A — SQL Editor (sin instalar nada):** en el dashboard de Supabase andá a **SQL Editor → New query**,
 pegá el contenido completo de cada archivo y tocá **Run**, de a uno y en orden. Cada uno tiene que
@@ -42,7 +43,7 @@ npx supabase link --project-ref <ref-de-tu-proyecto>
 npx supabase db push
 ```
 
-Nunca edites una migración que ya aplicaste: los cambios van en un archivo nuevo (`0006_...sql`).
+Nunca edites una migración que ya aplicaste: los cambios van en un archivo nuevo (`0007_...sql`).
 
 Para comprobar que quedó todo bien, corré en el SQL Editor:
 

@@ -112,6 +112,14 @@ Ventas minoristas y pedidos mayoristas comparten tablas (`ventas` / `venta_items
 - Se puede descargar/imprimir desde el POS al cobrar, desde el historial de ventas y desde el pedido.
 - Tamaño A4; opcional formato ticket 80mm para el POS.
 
+### Carga masiva de productos (Excel)
+- Desde /productos/importar se descarga una plantilla .xlsx con columnas: SKU, Nombre, Categoría, Código de barras, Precio minorista, Precio mayorista, Costo, Stock inicial, Stock mínimo (obligatorias: SKU, Nombre y los dos precios). Máximo 2000 filas por archivo.
+- Antes de importar se muestra una previsualización por fila: producto nuevo, actualización o errores. Con errores no se importa nada.
+- SKU nuevo → se crea; el stock inicial entra como movimiento `ajuste` ("Stock inicial (importación)"); el costo inicial se toma de la planilla.
+- SKU existente → se actualizan nombre y precios (y categoría, código de barras y stock mínimo si vienen); **costo y stock no se tocan** (cambian solo con compras y ajustes).
+- Categorías inexistentes se crean (comparación sin distinguir mayúsculas).
+- La importación es una sola transacción (RPC `importar_productos`): todo o nada.
+
 ### Gastos
 - Fecha, categoría, monto, descripción, adjunto opcional (jpg/png/pdf, máx 5 MB) subido a Storage bucket privado `comprobantes`.
 - Ver/descargar el adjunto con signed URL. Al borrar el gasto se borra el archivo.

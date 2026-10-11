@@ -43,6 +43,9 @@ export default async function ProductosPage({ searchParams }: { searchParams: Se
             <Link href="/productos/categorias" className={btn}>
               Categorías
             </Link>
+            <Link href="/productos/importar" className={btn}>
+              Importar Excel
+            </Link>
             <Link href="/productos/nuevo" className={btnPrimary}>
               Nuevo producto
             </Link>

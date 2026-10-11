@@ -299,6 +299,24 @@
       ],
       "passes": true,
       "notes": "Verificado 2026-10-10: loading/error/not-found + estados vacíos en todas las pantallas con listas; README con setup completo; build, lint y test pasan."
+    },
+    {
+      "id": "F20",
+      "area": "productos",
+      "title": "Carga masiva de productos desde Excel (.xlsx) con previsualización",
+      "depends_on": [
+        "F07"
+      ],
+      "verify": [
+        "Se descarga una plantilla .xlsx con las columnas de SPEC §4 (Carga masiva)",
+        "Al subir el Excel se ve cada fila con su resultado (nuevo / actualiza / error) antes de importar",
+        "Con errores no se puede importar; un .csv u otro formato se rechaza con mensaje claro",
+        "Importar crea productos nuevos con su stock inicial como movimiento de ajuste y crea categorías faltantes",
+        "Un SKU existente actualiza nombre y precios sin tocar costo ni stock",
+        "La importación es todo o nada: si una fila falla en la base no se carga ningún producto"
+      ],
+      "passes": false,
+      "notes": "Implementado 2026-10-11 a pedido del usuario. Verificado: tests (análisis de planilla + RPC en PGlite) y circuito en navegador con datos de prueba. Falta: aplicar 0006_importar_productos.sql e importar contra la BD real."
     }
   ]
 }
