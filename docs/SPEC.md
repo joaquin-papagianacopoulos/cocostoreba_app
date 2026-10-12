@@ -120,6 +120,19 @@ Ventas minoristas y pedidos mayoristas comparten tablas (`ventas` / `venta_items
 - Categorías inexistentes se crean (comparación sin distinguir mayúsculas).
 - La importación es una sola transacción (RPC `importar_productos`): todo o nada.
 
+### Productos en dólares (USD)
+- Cada producto tiene moneda **ARS o USD**; precio minorista, mayorista y costo están en esa moneda. Los productos existentes quedan en ARS.
+- Cotización: **dólar cripto, valor de venta**, de DolarApi.com (`/v1/dolares/cripto`, mismas cotizaciones que dolarhoy.com). Se consulta como mucho cada 5 minutos y se guarda en la tabla `cotizaciones`; si la API no responde se usa la última guardada. Sin ninguna cotización, los productos en USD no se pueden vender.
+- Precio de venta en pesos = precio USD × cotización, **redondeado al $100 más cercano**. Las promos y descuentos se aplican sobre el precio en pesos.
+- Las ventas y pedidos siguen guardándose en pesos; cada venta guarda la cotización usada (`ventas.cotizacion_usd`) y el precio USD de cada ítem (`venta_items.precio_usd`). Al confirmar, el costo de los productos USD se congela en pesos con esa cotización (costo histórico).
+- POS: si la cotización cambió entre que se cargó la pantalla y el cobro, no cobra: avisa y recarga los precios.
+- Pedidos: la cotización se fija al guardar el borrador.
+- Compras: el costo unitario va en la moneda del producto (promedio ponderado en esa moneda); el total de la compra se guarda en pesos.
+- Cambiar la moneda de un producto convierte su costo con la cotización del momento y pide los precios en la moneda nueva.
+- Comprobante PDF: muestra la cotización usada y "US$ x c/u" en los ítems en dólares.
+- Dashboard: muestra la cotización vigente; el valor del stock convierte los productos USD con la última cotización guardada. Ventas, CMV y ganancias son en pesos.
+- Excel: columna opcional "Moneda" (ARS/USD); no cambia la moneda de un producto existente.
+
 ### Gastos
 - Fecha, categoría, monto, descripción, adjunto opcional (jpg/png/pdf, máx 5 MB) subido a Storage bucket privado `comprobantes`.
 - Ver/descargar el adjunto con signed URL. Al borrar el gasto se borra el archivo.

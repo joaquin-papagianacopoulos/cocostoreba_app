@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { EmptyState, PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
+import { getCotizacion } from "@/lib/cotizacion-server";
+import { formatUsd, precioUsdAPesos } from "@/lib/moneda";
 import { formatMoney, parseMoney } from "@/lib/money";
 import { isStockBajo } from "@/lib/productos/schema";
 import { cambiarActivoProducto } from "@/lib/productos/actions";
@@ -10,6 +12,11 @@ import { badge, btn, btnPrimary, cx, input, table, td, th } from "@/lib/ui";
 
 type SearchParams = Promise<{ q?: string; inactivos?: string; bajo?: string }>;
 
+/** Monto en la moneda del producto. */
+function precio(p: Producto, monto: Producto["costo"]) {
+  return p.moneda === "USD" ? formatUsd(parseMoney(monto)) : formatMoney(parseMoney(monto));
+}
+
 export default async function ProductosPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const q = sanitizeSearch(params.q);
@@ -17,6 +24,7 @@ export default async function ProductosPage({ searchParams }: { searchParams: Se
   const soloBajo = params.bajo === "1";
 
   const supabase = await createClient();
+  const cotizacion = (await getCotizacion())?.venta ?? null;
   let query = supabase.from("productos").select("*").order("nombre").limit(1000);
   if (q) query = query.or(ilikeAny(["nombre", "sku", "codigo_barras"], q));
   if (!verInactivos) query = query.eq("activo", true);
@@ -115,11 +123,16 @@ export default async function ProductosPage({ searchParams }: { searchParams: Se
                       {(p.categoria_id && categorias.get(p.categoria_id)) || "—"}
                     </td>
                     <td className={cx(td, "hidden text-right tabular-nums lg:table-cell")}>
-                      {formatMoney(parseMoney(p.costo))}
+                      {precio(p, p.costo)}
                     </td>
-                    <td className={cx(td, "text-right tabular-nums")}>{formatMoney(parseMoney(p.precio_minorista))}</td>
+                    <td className={cx(td, "text-right tabular-nums")}>
+                      {precio(p, p.precio_minorista)}
+                      {p.moneda === "USD" && cotizacion && (
+                        <div className="text-xs opacity-60">≈ {formatMoney(precioUsdAPesos(parseMoney(p.precio_minorista), cotizacion))}</div>
+                      )}
+                    </td>
                     <td className={cx(td, "hidden text-right tabular-nums sm:table-cell")}>
-                      {formatMoney(parseMoney(p.precio_mayorista))}
+                      {precio(p, p.precio_mayorista)}
                     </td>
                     <td className={cx(td, "text-right tabular-nums")}>
                       <div className="flex flex-col items-end gap-0.5">

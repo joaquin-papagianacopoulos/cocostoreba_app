@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getCotizacion } from "@/lib/cotizacion-server";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError } from "@/lib/db-errors";
 import { type FormState, formDataToObject, invalid } from "@/lib/forms";
@@ -13,10 +14,23 @@ export async function registrarCompra(_prev: FormState, formData: FormData): Pro
   const { proveedor, notas, items } = parsed.data;
 
   const supabase = await createClient();
+  // Los costos van en la moneda de cada producto; con productos en USD hace falta la
+  // cotización para guardar el total de la compra en pesos.
+  const { data: monedas } = await supabase
+    .from("productos")
+    .select("moneda")
+    .in("id", items.map((i) => i.producto_id));
+  let cotizacion: number | null = null;
+  if (((monedas as { moneda: string }[] | null) ?? []).some((p) => p.moneda === "USD")) {
+    cotizacion = (await getCotizacion())?.venta ?? null;
+    if (!cotizacion) return { error: "No hay cotización del dólar disponible para los productos en USD" };
+  }
+
   const { error } = await supabase.rpc("registrar_compra", {
     p_proveedor: proveedor,
     p_items: items,
     p_notas: notas,
+    p_cotizacion: cotizacion,
   });
   if (error) return { error: friendlyDbError(error, "No se pudo registrar la compra") };
 

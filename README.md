@@ -30,6 +30,7 @@ vez cada una:
 | `0004_pedidos.sql` | Funciones para guardar pedidos mayoristas y marcarlos entregados |
 | `0005_reportes.sql` | Funciones de reportes del dashboard |
 | `0006_importar_productos.sql` | Carga masiva de productos desde Excel |
+| `0007_moneda_usd.sql` | Productos en USD, cotizaciones del dólar cripto |
 
 **Opción A — SQL Editor (sin instalar nada):** en el dashboard de Supabase andá a **SQL Editor → New query**,
 pegá el contenido completo de cada archivo y tocá **Run**, de a uno y en orden. Cada uno tiene que
@@ -43,7 +44,7 @@ npx supabase link --project-ref <ref-de-tu-proyecto>
 npx supabase db push
 ```
 
-Nunca edites una migración que ya aplicaste: los cambios van en un archivo nuevo (`0007_...sql`).
+Nunca edites una migración que ya aplicaste: los cambios van en un archivo nuevo (`0008_...sql`).
 
 Para comprobar que quedó todo bien, corré en el SQL Editor:
 
@@ -102,6 +103,7 @@ El repo incluye [netlify.toml](netlify.toml) con el plugin oficial de Next.js.
 ## Reglas importantes (para quien toque el código)
 
 - **Plata:** `numeric(12,2)` en la base; en TypeScript siempre con [lib/money.ts](lib/money.ts).
+- **Dólares:** los productos pueden estar en USD; se venden en pesos con el dólar cripto (DolarApi.com) vía [lib/moneda.ts](lib/moneda.ts) y [lib/cotizacion-server.ts](lib/cotizacion-server.ts). Cada venta guarda la cotización usada.
 - **Fechas:** hora de Argentina ([lib/dates.ts](lib/dates.ts)); los filtros se convierten a UTC para consultar.
 - **Stock:** solo cambia a través de las funciones de Postgres (`crear_venta_minorista`, `confirmar_venta`,
   `anular_venta`, `registrar_compra`, `ajustar_stock`); cada cambio deja un movimiento en `movimientos_stock`.

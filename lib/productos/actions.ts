@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { getCotizacion } from "@/lib/cotizacion-server";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyDbError, uniqueViolationField } from "@/lib/db-errors";
 import { type FormState, formDataToObject, invalid } from "@/lib/forms";
@@ -43,10 +44,32 @@ export async function crearProducto(_prev: FormState, formData: FormData): Promi
 export async function actualizarProducto(id: string, _prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = productoUpdateSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) return invalid(parsed.error);
+  const { moneda, precio_minorista, precio_mayorista, ...resto } = parsed.data;
 
   const supabase = await createClient();
-  const { error } = await supabase.from("productos").update(parsed.data).eq("id", id);
+  const { data: actual } = await supabase.from("productos").select("moneda").eq("id", id).maybeSingle();
+  if (!actual) return { error: "El producto no existe" };
+  const cambiaMoneda = (actual as { moneda: string }).moneda !== moneda;
+
+  // La moneda no se edita directo: cambiar_moneda_producto convierte también el costo.
+  const { error } = await supabase
+    .from("productos")
+    .update(cambiaMoneda ? resto : { ...resto, precio_minorista, precio_mayorista })
+    .eq("id", id);
   if (error) return dbFailure(error);
+
+  if (cambiaMoneda) {
+    const cotizacion = await getCotizacion();
+    if (!cotizacion) return { error: "No hay cotización del dólar disponible: no se pudo cambiar la moneda" };
+    const { error: monedaError } = await supabase.rpc("cambiar_moneda_producto", {
+      p_producto_id: id,
+      p_moneda: moneda,
+      p_cotizacion: cotizacion.venta,
+      p_precio_minorista: precio_minorista,
+      p_precio_mayorista: precio_mayorista,
+    });
+    if (monedaError) return { error: friendlyDbError(monedaError, "No se pudo cambiar la moneda") };
+  }
 
   revalidatePath("/productos");
   redirect("/productos");

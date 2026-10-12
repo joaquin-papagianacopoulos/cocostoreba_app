@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getCotizacion } from "@/lib/cotizacion-server";
 import { todayAR } from "@/lib/dates";
 import { friendlyDbError } from "@/lib/db-errors";
-import { parseMoney } from "@/lib/money";
+import { toProductoVendible } from "@/lib/productos/conversion";
 import { getPromosActivas } from "@/lib/promociones/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { Producto, Venta } from "@/lib/types";
@@ -47,19 +48,18 @@ export async function guardarPedido(input: PedidoInput): Promise<PedidoResult> {
     ]);
     if (productosError) return { ok: false, error: "No se pudieron leer los productos" };
 
-    const productos = new Map<string, ProductoVendible>(
-      ((productosData as Producto[] | null) ?? []).map((p) => [
-        p.id,
-        {
-          id: p.id,
-          nombre: p.nombre,
-          activo: p.activo,
-          categoria_id: p.categoria_id,
-          precio_minorista: parseMoney(p.precio_minorista),
-          precio_mayorista: parseMoney(p.precio_mayorista),
-        },
-      ]),
-    );
+    const filas = (productosData as Producto[] | null) ?? [];
+
+    // Los precios del pedido vienen en pesos (pueden ser negociados); la cotización se guarda
+    // con el pedido y es la que congela el costo de los productos en USD al confirmar.
+    let cotizacion: number | null = null;
+    if (filas.some((p) => p.moneda === "USD")) {
+      const actual = await getCotizacion();
+      if (!actual) return { ok: false, error: "No hay cotización del dólar disponible para los productos en USD" };
+      cotizacion = actual.venta;
+    }
+
+    const productos = new Map<string, ProductoVendible>(filas.map((p) => [p.id, toProductoVendible(p, cotizacion)]));
 
     const armado = armarVenta(items, productos, promos, "mayorista", todayAR(), descuento);
     if (!armado.ok) return armado;
@@ -72,6 +72,7 @@ export async function guardarPedido(input: PedidoInput): Promise<PedidoResult> {
         p_descuento: armado.venta.totales.descuentoGeneral,
         p_medio_pago: medio_pago,
         p_notas: notas || null,
+        p_cotizacion: cotizacion,
       })
       .single();
     if (error) return { ok: false, error: friendlyDbError(error, "No se pudo guardar el pedido") };

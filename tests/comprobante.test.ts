@@ -27,17 +27,18 @@ const venta: Venta = {
   total: "12149.99",
   medio_pago: "efectivo",
   notas: null,
+  cotizacion_usd: null,
   created_at: "2026-10-10T02:30:00Z",
 };
 
 const items = [
   {
     id: "i1", venta_id: "v1", producto_id: "p1", cantidad: 2, precio_unitario: "9500", costo_unitario: "4000",
-    descuento: "9500", promocion_id: "promo", total: "9500", producto: { nombre: "Vaper Mango Ice", sku: "VAP-01" },
+    descuento: "9500", promocion_id: "promo", total: "9500", precio_usd: null, producto: { nombre: "Vaper Mango Ice", sku: "VAP-01" },
   },
   {
     id: "i2", venta_id: "v1", producto_id: "p2", cantidad: 1, precio_unitario: "3999.99", costo_unitario: "1500",
-    descuento: "0", promocion_id: null, total: "3999.99", producto: { nombre: "Líquido Menta 30ml", sku: "LIQ-02" },
+    descuento: "0", promocion_id: null, total: "3999.99", precio_usd: null, producto: { nombre: "Líquido Menta 30ml", sku: "LIQ-02" },
   },
 ];
 

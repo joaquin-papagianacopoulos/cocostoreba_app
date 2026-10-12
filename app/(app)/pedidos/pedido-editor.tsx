@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { ProductSelect } from "@/components/product-select";
+import { formatUsd } from "@/lib/moneda";
 import { formatMoney } from "@/lib/money";
 import { guardarPedido } from "@/lib/pedidos/actions";
 import { type PromoParaPrecio, calcularVenta } from "@/lib/pricing";
@@ -20,7 +21,7 @@ const toNumber = (s: string) => Number(s.trim().replace(",", "."));
 
 export function PedidoEditor({
   pedidoId,
-  productos,
+  productos: todos,
   promos,
   clientes,
   fecha,
@@ -40,6 +41,8 @@ export function PedidoEditor({
   };
 }) {
   const router = useRouter();
+  // Sin cotización, los productos en USD no se pueden pedir.
+  const productos = useMemo(() => todos.filter((p) => p.disponible), [todos]);
   const porId = useMemo(() => new Map(productos.map((p) => [p.id, p])), [productos]);
   const [clienteId, setClienteId] = useState(inicial?.cliente_id ?? "");
   const [lineas, setLineas] = useState<LineaEditable[]>(() =>
@@ -195,6 +198,7 @@ export function PedidoEditor({
               {producto && (
                 <p className="text-xs opacity-60 sm:col-span-4">
                   Stock {producto.stock} · mayorista {formatMoney(producto.precio_mayorista)}
+                  {producto.moneda === "USD" && ` (${formatUsd(producto.original.precio_mayorista)})`}
                   {calc?.promocion && (
                     <span className="font-medium text-emerald-700 dark:text-emerald-400">
                       {" "}

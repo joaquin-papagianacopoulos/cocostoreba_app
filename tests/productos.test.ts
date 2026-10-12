@@ -26,6 +26,7 @@ describe("productoCreateSchema", () => {
       precio_mayorista: 1200,
       stock_minimo: 3,
       activo: true,
+      moneda: "ARS",
       costo: 0,
       stock_inicial: 10,
     });

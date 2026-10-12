@@ -1,6 +1,7 @@
 // Datos de un comprobante (venta minorista o pedido mayorista) listos para dibujar.
 // Separado del PDF para poder testearlo.
 import { formatFechaHora } from "@/lib/dates";
+import { formatUsd } from "@/lib/moneda";
 import { formatMoney, multiplyMoney, parseMoney, round2, sumMoney } from "@/lib/money";
 import { type Cliente, type Configuracion, type Venta, type VentaItem, medioPagoLabel } from "@/lib/types";
 
@@ -22,6 +23,8 @@ export type ComprobanteData = {
   descuentoGeneral: string | null;
   total: string;
   medioPago: string | null;
+  /** "Dólar cripto: $ 1.609,83" si la venta tenía productos en USD. */
+  cotizacion: string | null;
   notas: string | null;
   leyenda: string;
 };
@@ -50,7 +53,9 @@ export function buildComprobante(input: {
       descuento,
       fila: {
         cantidad: i.cantidad,
-        descripcion: i.producto ? `${i.producto.nombre} (${i.producto.sku})` : "Producto",
+        descripcion:
+          (i.producto ? `${i.producto.nombre} (${i.producto.sku})` : "Producto") +
+          (i.precio_usd !== null && i.precio_usd !== undefined ? ` · ${formatUsd(parseMoney(i.precio_usd))} c/u` : ""),
         precioUnitario: formatMoney(precio),
         descuento: descuento > 0 ? menos(descuento) : "",
         subtotal: formatMoney(round2(bruto - descuento)),
@@ -88,6 +93,7 @@ export function buildComprobante(input: {
     descuentoGeneral: descuentoGeneral > 0 ? menos(descuentoGeneral) : null,
     total: formatMoney(parseMoney(venta.total)),
     medioPago: venta.medio_pago ? medioPagoLabel(venta.medio_pago) : null,
+    cotizacion: venta.cotizacion_usd ? `Dólar cripto: ${formatMoney(parseMoney(venta.cotizacion_usd))}` : null,
     notas: venta.notas,
     leyenda: LEYENDA_NO_FISCAL,
   };

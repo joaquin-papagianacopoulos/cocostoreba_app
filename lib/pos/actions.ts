@@ -2,9 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { mismaCotizacion } from "@/lib/cotizacion";
+import { getCotizacion } from "@/lib/cotizacion-server";
 import { todayAR } from "@/lib/dates";
 import { friendlyDbError } from "@/lib/db-errors";
-import { parseMoney } from "@/lib/money";
+import { formatMoney, parseMoney } from "@/lib/money";
+import { toProductoVendible } from "@/lib/productos/conversion";
 import { getPromosActivas } from "@/lib/promociones/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { MedioPago, Producto, Venta } from "@/lib/types";
@@ -15,13 +18,15 @@ const cobrarSchema = z.object({
   medio_pago: z.enum(["efectivo", "transferencia", "debito", "credito", "otro"], { error: "Elegí un medio de pago" }),
   descuento: descuentoGeneralSchema,
   notas: z.string().trim().max(500).optional(),
+  /** Cotización con la que el POS mostró los precios (null si no había). */
+  cotizacion: z.number().positive().nullable().optional(),
 });
 
 export type CobrarInput = z.input<typeof cobrarSchema>;
 
 export type CobrarResult =
   | { ok: true; venta: { id: string; numero: number; total: number; medio_pago: MedioPago } }
-  | { ok: false; error: string };
+  | { ok: false; error: string; cotizacionCambio?: boolean };
 
 export async function cobrarVenta(input: CobrarInput): Promise<CobrarResult> {
   try {
@@ -34,7 +39,7 @@ export async function cobrarVenta(input: CobrarInput): Promise<CobrarResult> {
 async function cobrar(input: CobrarInput): Promise<CobrarResult> {
   const parsed = cobrarSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
-  const { items, medio_pago, descuento, notas } = parsed.data;
+  const { items, medio_pago, descuento, notas, cotizacion: cotizacionCliente } = parsed.data;
 
   const supabase = await createClient();
   const ids = [...new Set(items.map((i) => i.producto_id))];
@@ -43,21 +48,24 @@ async function cobrar(input: CobrarInput): Promise<CobrarResult> {
     getPromosActivas(),
   ]);
   if (productosError) return { ok: false, error: "No se pudieron leer los productos" };
+  const filas = (productosData as Producto[] | null) ?? [];
 
-  const productos = new Map<string, ProductoVendible>(
-    ((productosData as Producto[] | null) ?? []).map((p) => [
-      p.id,
-      {
-        id: p.id,
-        nombre: p.nombre,
-        activo: p.activo,
-        categoria_id: p.categoria_id,
-        precio_minorista: parseMoney(p.precio_minorista),
-        precio_mayorista: parseMoney(p.precio_mayorista),
-      },
-    ]),
-  );
+  // Con productos en USD, se cobra con la cotización vigente, que tiene que ser la que vio el usuario.
+  let cotizacion: number | null = null;
+  if (filas.some((p) => p.moneda === "USD")) {
+    const actual = await getCotizacion();
+    if (!actual) return { ok: false, error: "No hay cotización del dólar disponible: no se pueden cobrar productos en USD" };
+    if (!mismaCotizacion(actual.venta, cotizacionCliente)) {
+      return {
+        ok: false,
+        cotizacionCambio: true,
+        error: `La cotización del dólar cambió a ${formatMoney(actual.venta)}. Se actualizaron los precios: revisá el total y volvé a cobrar.`,
+      };
+    }
+    cotizacion = actual.venta;
+  }
 
+  const productos = new Map<string, ProductoVendible>(filas.map((p) => [p.id, toProductoVendible(p, cotizacion)]));
   const armado = armarVenta(items, productos, promos, "minorista", todayAR(), descuento);
   if (!armado.ok) return armado;
 
@@ -67,6 +75,7 @@ async function cobrar(input: CobrarInput): Promise<CobrarResult> {
       p_medio_pago: medio_pago,
       p_descuento: armado.venta.totales.descuentoGeneral,
       p_notas: notas || null,
+      p_cotizacion: cotizacion,
     })
     .single();
   if (error) return { ok: false, error: friendlyDbError(error, "No se pudo cobrar la venta") };

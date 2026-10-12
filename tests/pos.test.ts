@@ -34,8 +34,8 @@ describe("búsqueda del POS", () => {
 
 describe("armarVenta", () => {
   const productos = new Map<string, ProductoVendible>([
-    [A, { id: A, nombre: "Vaper", activo: true, categoria_id: null, precio_minorista: 100, precio_mayorista: 80 }],
-    [B, { id: B, nombre: "Líquido", activo: false, categoria_id: null, precio_minorista: 50, precio_mayorista: 40 }],
+    [A, { id: A, nombre: "Vaper", activo: true, categoria_id: null, precio_minorista: 100, precio_mayorista: 80, usd: null }],
+    [B, { id: B, nombre: "Líquido", activo: false, categoria_id: null, precio_minorista: 50, precio_mayorista: 40, usd: null }],
   ]);
   const dosPorUno: PromoParaPrecio = {
     id: "promo-2x1",
@@ -68,7 +68,7 @@ describe("armarVenta", () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.venta.items).toEqual([
-      { producto_id: A, cantidad: 5, precio_unitario: 100, descuento: 200, promocion_id: "promo-2x1" },
+      { producto_id: A, cantidad: 5, precio_unitario: 100, descuento: 200, promocion_id: "promo-2x1", precio_usd: null },
     ]);
     expect(r.venta.totales).toMatchObject({ subtotal: 300, descuentoGeneral: 10, total: 290 });
   });

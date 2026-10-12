@@ -5,10 +5,10 @@ import { useActionState, useState } from "react";
 import { ActionForm, FieldError } from "@/components/action-form";
 import { ProductSelect } from "@/components/product-select";
 import { initialFormState } from "@/lib/forms";
-import { formatMoney, multiplyMoney } from "@/lib/money";
+import { costoUsdAPesos, formatUsd } from "@/lib/moneda";
+import { formatMoney, multiplyMoney, sumMoney } from "@/lib/money";
 import type { ProductoOpcion } from "@/lib/productos/queries";
 import { registrarCompra } from "@/lib/stock/actions";
-import { totalCompra } from "@/lib/stock/schema";
 import { btn, btnPrimary, card, cx, errorBox, input, label } from "@/lib/ui";
 
 type Linea = { key: number; producto_id: string; cantidad: string; costo_unitario: string };
@@ -18,7 +18,7 @@ const lineaVacia = (): Linea => ({ key: nextKey++, producto_id: "", cantidad: "1
 
 const toNumber = (s: string) => Number(s.replace(",", "."));
 
-export function CompraForm({ productos }: { productos: ProductoOpcion[] }) {
+export function CompraForm({ productos, cotizacion }: { productos: ProductoOpcion[]; cotizacion: number | null }) {
   const [state, action, pending] = useActionState(registrarCompra, initialFormState);
   const [lineas, setLineas] = useState<Linea[]>(() => [lineaVacia()]);
   const porId = new Map(productos.map((p) => [p.id, p]));
@@ -31,10 +31,16 @@ export function CompraForm({ productos }: { productos: ProductoOpcion[] }) {
     cantidad: l.cantidad,
     costo_unitario: l.costo_unitario,
   }));
-  const validas = lineas
-    .map((l) => ({ cantidad: toNumber(l.cantidad), costo_unitario: toNumber(l.costo_unitario) }))
-    .filter((l) => Number.isFinite(l.cantidad) && Number.isFinite(l.costo_unitario) && l.cantidad > 0);
-  const total = totalCompra(validas);
+  // Cada costo va en la moneda del producto; el total se muestra en pesos.
+  const enPesos = (l: Linea) => {
+    const cantidad = toNumber(l.cantidad);
+    const costo = toNumber(l.costo_unitario);
+    if (!Number.isFinite(cantidad) || !Number.isFinite(costo) || cantidad <= 0) return 0;
+    const subtotal = multiplyMoney(cantidad, costo);
+    return porId.get(l.producto_id)?.moneda === "USD" ? costoUsdAPesos(subtotal, cotizacion ?? 0) : subtotal;
+  };
+  const total = sumMoney(lineas.map(enPesos));
+  const hayUsd = lineas.some((l) => porId.get(l.producto_id)?.moneda === "USD");
   const e = state.fieldErrors;
 
   return (
@@ -70,7 +76,7 @@ export function CompraForm({ productos }: { productos: ProductoOpcion[] }) {
                     update(l.key, {
                       producto_id: id,
                       // Precarga el costo actual como referencia.
-                      costo_unitario: l.costo_unitario || String(porId.get(id)?.costo ?? ""),
+                      costo_unitario: l.costo_unitario || String(porId.get(id)?.original.costo ?? ""),
                     })
                   }
                 />
@@ -90,7 +96,7 @@ export function CompraForm({ productos }: { productos: ProductoOpcion[] }) {
                 <FieldError errors={e} name={`items.${i}.cantidad`} />
               </label>
               <label className={label}>
-                Costo unitario
+                Costo unitario{producto?.moneda === "USD" ? " (US$)" : ""}
                 <input
                   type="number"
                   min="0"
@@ -103,7 +109,9 @@ export function CompraForm({ productos }: { productos: ProductoOpcion[] }) {
                 <FieldError errors={e} name={`items.${i}.costo_unitario`} />
               </label>
               <div className="flex items-center justify-between gap-2 sm:flex-col sm:items-end">
-                <span className="text-sm tabular-nums">{formatMoney(subtotal)}</span>
+                <span className="text-sm tabular-nums">
+                  {producto?.moneda === "USD" ? formatUsd(subtotal) : formatMoney(subtotal)}
+                </span>
                 <button
                   type="button"
                   disabled={lineas.length === 1}
@@ -115,7 +123,8 @@ export function CompraForm({ productos }: { productos: ProductoOpcion[] }) {
               </div>
               {producto && (
                 <p className="text-xs opacity-60 sm:col-span-4">
-                  Stock actual {producto.stock} · costo actual {formatMoney(producto.costo)}
+                  Stock actual {producto.stock} · costo actual{" "}
+                  {producto.moneda === "USD" ? formatUsd(producto.original.costo) : formatMoney(producto.costo)}
                 </p>
               )}
             </div>
@@ -127,7 +136,12 @@ export function CompraForm({ productos }: { productos: ProductoOpcion[] }) {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-black/10 pt-4 dark:border-white/15">
-        <span className="text-lg font-semibold tabular-nums">Total {formatMoney(total)}</span>
+        <span className="text-lg font-semibold tabular-nums">
+          Total {formatMoney(total)}
+          {hayUsd && cotizacion && (
+            <span className="block text-xs font-normal opacity-70">Productos en USD convertidos a {formatMoney(cotizacion)}</span>
+          )}
+        </span>
         <div className="flex gap-2">
           <Link href="/stock" className={btn}>
             Cancelar

@@ -4,7 +4,7 @@ import { createDb, migrationFiles } from "./db";
 
 const TABLAS = [
   "categorias", "productos", "clientes", "compras", "compra_items", "movimientos_stock",
-  "promociones", "ventas", "venta_items", "categorias_gasto", "gastos", "configuracion",
+  "promociones", "ventas", "venta_items", "categorias_gasto", "gastos", "configuracion", "cotizaciones",
 ];
 
 let db: PGlite;

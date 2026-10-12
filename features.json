@@ -317,6 +317,26 @@
       ],
       "passes": false,
       "notes": "Implementado 2026-10-11 a pedido del usuario. Verificado: tests (análisis de planilla + RPC en PGlite) y circuito en navegador con datos de prueba. Falta: aplicar 0006_importar_productos.sql e importar contra la BD real."
+    },
+    {
+      "id": "F21",
+      "area": "productos",
+      "title": "Productos con precio en USD convertidos con el dólar cripto (DolarApi)",
+      "depends_on": [
+        "F11",
+        "F14"
+      ],
+      "verify": [
+        "Se puede crear un producto en USD (precios y costo en dólares) y cambiar la moneda de uno existente (el costo se convierte)",
+        "El POS y los pedidos muestran el precio en pesos (USD × dólar cripto venta, redondeado al $100) y la cotización vigente",
+        "Al cobrar, si la cotización cambió desde que se cargó el POS, avisa y actualiza los precios sin cobrar",
+        "La venta guarda la cotización usada y el costo en pesos queda congelado con esa cotización",
+        "El comprobante PDF muestra la cotización usada y el precio en USD de cada ítem",
+        "Si la API no responde se usa la última cotización guardada; sin ninguna, los productos en USD no se pueden vender",
+        "El valor del stock del dashboard convierte los productos en USD; compras e importación aceptan productos en USD"
+      ],
+      "passes": false,
+      "notes": "Implementado 2026-10-12 a pedido del usuario (decisiones: cripto venta, moneda por producto, costo en la misma moneda, redondeo al $100). Verificado: tests (171) + PGlite + navegador con datos de prueba. Falta: aplicar 0007_moneda_usd.sql y probar con la BD real."
     }
   ]
 }

@@ -7,7 +7,7 @@ import { Importador } from "./importador";
 export default async function ImportarProductosPage() {
   const supabase = await createClient();
   const [{ data: productos, error }, { data: categorias }] = await Promise.all([
-    supabase.from("productos").select("sku, codigo_barras").limit(10000),
+    supabase.from("productos").select("sku, codigo_barras, moneda").limit(10000),
     supabase.from("categorias").select("nombre"),
   ]);
   if (error) throw new Error("No se pudieron cargar los productos");
@@ -24,7 +24,7 @@ export default async function ImportarProductosPage() {
         }
       />
       <Importador
-        existentes={(productos as { sku: string; codigo_barras: string | null }[] | null) ?? []}
+        existentes={(productos as { sku: string; codigo_barras: string | null; moneda: "ARS" | "USD" }[] | null) ?? []}
         categorias={((categorias as { nombre: string }[] | null) ?? []).map((c) => c.nombre)}
       />
     </>

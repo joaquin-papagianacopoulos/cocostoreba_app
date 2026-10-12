@@ -17,6 +17,8 @@ export type Producto = {
   stock: number;
   stock_minimo: number;
   activo: boolean;
+  /** Moneda de precio minorista, mayorista y costo. */
+  moneda: "ARS" | "USD";
   created_at: string;
 };
 
@@ -92,6 +94,8 @@ export type Venta = {
   total: Numeric;
   medio_pago: MedioPago | null;
   notas: string | null;
+  /** Cotización del dólar usada si la venta tenía productos en USD. */
+  cotizacion_usd: Numeric | null;
   created_at: string;
 };
 
@@ -105,6 +109,8 @@ export type VentaItem = {
   descuento: Numeric;
   promocion_id: string | null;
   total: Numeric;
+  /** Precio unitario en USD si el producto estaba en dólares. */
+  precio_usd: Numeric | null;
 };
 
 export type CategoriaGasto = { id: string; nombre: string };

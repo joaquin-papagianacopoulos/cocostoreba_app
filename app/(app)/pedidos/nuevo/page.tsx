@@ -1,4 +1,6 @@
+import { CotizacionBadge } from "@/components/cotizacion-badge";
 import { PageHeader } from "@/components/page-header";
+import { getCotizacion } from "@/lib/cotizacion-server";
 import { todayAR } from "@/lib/dates";
 import { getProductosActivos } from "@/lib/productos/queries";
 import { getPromosActivas } from "@/lib/promociones/queries";
@@ -7,9 +9,10 @@ import { PedidoEditor } from "../pedido-editor";
 
 export default async function NuevoPedidoPage({ searchParams }: { searchParams: Promise<{ cliente?: string }> }) {
   const supabase = await createClient();
+  const cotizacion = await getCotizacion();
   const [{ cliente }, productos, promos, { data: clientes }] = await Promise.all([
     searchParams,
-    getProductosActivos(),
+    getProductosActivos(cotizacion?.venta ?? null),
     getPromosActivas(),
     supabase.from("clientes").select("id, nombre").order("nombre"),
   ]);
@@ -18,6 +21,7 @@ export default async function NuevoPedidoPage({ searchParams }: { searchParams: 
   return (
     <>
       <PageHeader title="Nuevo pedido mayorista" />
+      {productos.some((p) => p.moneda === "USD") && <CotizacionBadge cotizacion={cotizacion} className="-mt-3 mb-3" />}
       <PedidoEditor
         pedidoId={null}
         productos={productos}

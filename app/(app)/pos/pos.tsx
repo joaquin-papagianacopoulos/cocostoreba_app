@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { type CobrarResult, cobrarVenta } from "@/lib/pos/actions";
 import { buscarPorCodigo, esCodigo, filtrarProductos } from "@/lib/pos/search";
+import { formatUsd } from "@/lib/moneda";
 import { formatMoney } from "@/lib/money";
 import { type PromoParaPrecio, calcularVenta } from "@/lib/pricing";
 import type { ProductoOpcion } from "@/lib/productos/queries";
@@ -12,14 +14,20 @@ import { btn, btnPrimary, card, cx, errorBox, input, inputBase, okBox } from "@/
 type LineaCarrito = { producto_id: string; cantidad: number };
 
 export function Pos({
-  productos,
+  productos: todos,
   promos,
   fecha,
+  cotizacion,
 }: {
   productos: ProductoOpcion[];
   promos: PromoParaPrecio[];
   fecha: string;
+  /** Dólar con el que se convirtieron los productos en USD (null si no hay). */
+  cotizacion: number | null;
 }) {
+  const router = useRouter();
+  // Sin cotización, los productos en USD no se pueden vender.
+  const productos = useMemo(() => todos.filter((p) => p.disponible), [todos]);
   const porId = useMemo(() => new Map(productos.map((p) => [p.id, p])), [productos]);
   const [busqueda, setBusqueda] = useState("");
   const [aviso, setAviso] = useState<string | null>(null);
@@ -88,8 +96,10 @@ export function Pos({
       return;
     }
     startCobro(async () => {
-      const r = await cobrarVenta({ items: carrito, medio_pago: medioPago, descuento });
+      const r = await cobrarVenta({ items: carrito, medio_pago: medioPago, descuento, cotizacion });
       setResultado(r);
+      // Si cambió el dólar, se recargan los precios (el carrito se conserva) para revisar y cobrar de nuevo.
+      if (!r.ok && r.cotizacionCambio) router.refresh();
       if (r.ok) {
         setCarrito([]);
         setDescValor("");
@@ -138,6 +148,7 @@ export function Pos({
                       <span className="block truncate font-medium">{p.nombre}</span>
                       <span className="text-xs opacity-60">
                         {p.sku} · stock {p.stock}
+                        {p.moneda === "USD" && ` · ${formatUsd(p.original.precio_minorista)}`}
                       </span>
                     </span>
                     <span className="shrink-0 tabular-nums">{formatMoney(p.precio_minorista)}</span>
@@ -192,6 +203,7 @@ export function Pos({
                       <p className="truncate font-medium">{p.nombre}</p>
                       <p className="text-xs opacity-60">
                         {formatMoney(l.precio_unitario)} c/u
+                        {p.moneda === "USD" && ` (${formatUsd(p.original.precio_minorista)})`}
                         {sinStock && <span className="text-red-600 dark:text-red-400"> · hay {p.stock} en stock</span>}
                       </p>
                       {l.promocion && (

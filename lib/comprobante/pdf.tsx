@@ -115,6 +115,12 @@ function ComprobanteDoc({ data, logo }: { data: ComprobanteData; logo: string | 
               <Text style={s.muted}>{data.medioPago}</Text>
             </View>
           )}
+          {data.cotizacion && (
+            <View style={s.totalRow}>
+              <Text style={s.muted}>Cotización usada</Text>
+              <Text style={s.muted}>{data.cotizacion}</Text>
+            </View>
+          )}
         </View>
 
         {data.notas && (

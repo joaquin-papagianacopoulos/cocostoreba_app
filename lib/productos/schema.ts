@@ -15,6 +15,8 @@ const base = {
   precio_mayorista: moneyInput("Precio mayorista"),
   stock_minimo: intInput("Stock mínimo", { min: 0, max: 1_000_000 }),
   activo: checkbox,
+  /** Moneda de precios y costo. */
+  moneda: z.enum(["ARS", "USD"], { error: "Elegí la moneda" }).default("ARS"),
 };
 
 /** Edición: costo y stock no se tocan acá (cambian con compras y ajustes). */

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { formatUsd } from "@/lib/moneda";
 import { formatMoney } from "@/lib/money";
 import {
   type AnalisisImportacion,
@@ -17,13 +18,13 @@ import { badge, btn, btnPrimary, card, cx, errorBox, okBox, table, td, th } from
 
 async function descargarPlantilla() {
   const { default: writeXlsxFile } = await import("write-excel-file/browser");
-  const [encabezados, ejemplo] = filasPlantilla();
+  const [encabezados, ...ejemplos] = filasPlantilla();
   // SKU y código de barras como texto: así Excel no les come los ceros ni los pasa a notación científica.
-  const comoTexto = new Set([0, 3]);
+  const comoTexto = new Set([0, 3, 9]);
   await writeXlsxFile(
     [
       encabezados.map((v) => ({ value: String(v), fontWeight: "bold" as const })),
-      ejemplo.map((v, i) => (comoTexto.has(i) ? { value: String(v), type: String } : { value: v })),
+      ...ejemplos.map((fila) => fila.map((v, i) => (comoTexto.has(i) ? { value: String(v), type: String } : { value: v }))),
     ],
     { columns: COLUMNAS.map((c) => ({ width: Math.max(c.titulo.length + 4, c.clave === "nombre" ? 32 : 14) })) },
   ).toFile("plantilla-productos.xlsx");
@@ -176,10 +177,10 @@ export function Importador({ existentes, categorias }: { existentes: ProductoExi
                       )}
                     </td>
                     <td className={cx(td, "hidden text-right tabular-nums sm:table-cell")}>
-                      {f.datos ? formatMoney(f.datos.precio_minorista) : ""}
+                      {f.datos ? (f.datos.moneda === "USD" ? formatUsd(f.datos.precio_minorista) : formatMoney(f.datos.precio_minorista)) : ""}
                     </td>
                     <td className={cx(td, "hidden text-right tabular-nums sm:table-cell")}>
-                      {f.datos ? formatMoney(f.datos.precio_mayorista) : ""}
+                      {f.datos ? (f.datos.moneda === "USD" ? formatUsd(f.datos.precio_mayorista) : formatMoney(f.datos.precio_mayorista)) : ""}
                     </td>
                     <td className={cx(td, "hidden text-right tabular-nums md:table-cell")}>
                       {f.datos && f.accion === "crear" ? f.datos.stock_inicial : ""}

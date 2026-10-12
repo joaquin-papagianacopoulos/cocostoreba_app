@@ -3,7 +3,7 @@ import { getProductosActivos } from "@/lib/productos/queries";
 import { AjusteForm } from "./ajuste-form";
 
 export default async function AjustePage({ searchParams }: { searchParams: Promise<{ producto?: string }> }) {
-  const [{ producto }, productos] = await Promise.all([searchParams, getProductosActivos()]);
+  const [{ producto }, productos] = await Promise.all([searchParams, getProductosActivos(null)]);
   return (
     <>
       <PageHeader title="Ajuste manual de stock" description="Roturas, pérdidas o correcciones por conteo" />

@@ -34,9 +34,10 @@ describe("analizarPlanilla", () => {
         costo: 4000,
         stock_inicial: 10,
         stock_minimo: 3,
+        moneda: "ARS",
       },
     });
-    expect(a.resumen).toEqual({ crear: 1, actualizar: 0, conErrores: 0, categoriasNuevas: ["Vapers"] });
+    expect(a.resumen).toEqual({ crear: 2, actualizar: 0, conErrores: 0, categoriasNuevas: ["Vapers", "Pods"] });
   });
 
   it("acepta encabezados con otra forma, columnas en otro orden y salta filas vacías", () => {
@@ -54,7 +55,7 @@ describe("analizarPlanilla", () => {
     expect(a.filas).toHaveLength(1);
     expect(a.filas[0]).toMatchObject({
       fila: 3,
-      datos: { sku: "LIQ-1", precio_minorista: 1000, precio_mayorista: 800, codigo_barras: "7790000000001", stock_inicial: 0, stock_minimo: null, costo: null, categoria: null },
+      datos: { sku: "LIQ-1", precio_minorista: 1000, precio_mayorista: 800, codigo_barras: "7790000000001", stock_inicial: 0, stock_minimo: null, costo: null, categoria: null, moneda: null },
     });
   });
 

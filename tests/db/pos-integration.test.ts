@@ -23,8 +23,8 @@ describe("POS → crear_venta_minorista", () => {
     );
     const [a, b] = rows.map((r) => r.id);
     const productos = new Map<string, ProductoVendible>([
-      [a, { id: a, nombre: "Vaper", activo: true, categoria_id: null, precio_minorista: 33.33, precio_mayorista: 30 }],
-      [b, { id: b, nombre: "Líquido", activo: true, categoria_id: null, precio_minorista: 19.99, precio_mayorista: 15 }],
+      [a, { id: a, nombre: "Vaper", activo: true, categoria_id: null, precio_minorista: 33.33, precio_mayorista: 30, usd: null }],
+      [b, { id: b, nombre: "Líquido", activo: true, categoria_id: null, precio_minorista: 19.99, precio_mayorista: 15, usd: null }],
     ]);
     const [promoRow] = (
       await db.query<{ id: string }>(

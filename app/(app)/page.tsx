@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { CotizacionBadge } from "@/components/cotizacion-badge";
 import { BarList } from "@/components/dashboard/bar-list";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { SeriesChart } from "@/components/dashboard/series-chart";
 import { DateRangeFilter } from "@/components/date-range-filter";
 import { PageHeader } from "@/components/page-header";
+import { getCotizacion } from "@/lib/cotizacion-server";
 import { formatFecha } from "@/lib/dates";
 import { resolverFiltroFechas } from "@/lib/filtro-fechas";
 import { formatMoney, formatPercent } from "@/lib/money";
@@ -28,6 +30,8 @@ export default async function DashboardPage({
   searchParams: Promise<{ desde?: string; hasta?: string }>;
 }) {
   const filtro = resolverFiltroFechas(await searchParams, "mes");
+  // Primero la cotización: si es nueva se guarda y el valor del stock en USD la usa.
+  const cotizacion = await getCotizacion();
   let d;
   try {
     d = await getDashboard(filtro.rango);
@@ -52,6 +56,7 @@ export default async function DashboardPage({
         title="Dashboard"
         description={`${filtro.descripcion} · comparado con ${formatFecha(d.rangoAnterior.desde)} al ${formatFecha(d.rangoAnterior.hasta)}`}
       />
+      <CotizacionBadge cotizacion={cotizacion} className="-mt-3 mb-3" />
       <DateRangeFilter rango={filtro.rango} activo={filtro.activo} presets={filtro.presets} />
 
       {/* KPIs */}
@@ -69,7 +74,11 @@ export default async function DashboardPage({
         <KpiCard label="Descuentos otorgados" valor={formatMoney(k.descuentos)} variacion={v("descuentos")} />
         <KpiCard label="Cantidad de ventas" valor={String(k.cantidad_ventas)} variacion={v("cantidad_ventas")} />
         <KpiCard label="Ticket promedio" valor={formatMoney(k.ticket_promedio)} variacion={v("ticket_promedio")} />
-        <KpiCard label="Valor del stock" valor={formatMoney(k.valor_stock)} nota="Actual, a costo" />
+        <KpiCard
+          label="Valor del stock"
+          valor={formatMoney(k.valor_stock)}
+          nota={cotizacion ? "Actual, a costo (USD al dólar cripto)" : "Actual, a costo"}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

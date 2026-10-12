@@ -1,6 +1,7 @@
 // Carga masiva de productos desde Excel: lectura de la planilla, validación por fila y
 // qué va a pasar con cada una. Lógica pura (la usan la previsualización y el servidor).
 import { z } from "zod";
+import { type Moneda, parseMoneda } from "@/lib/moneda";
 import { round2 } from "@/lib/money";
 
 export const MAX_FILAS_IMPORTACION = 2000;
@@ -14,7 +15,8 @@ type Clave =
   | "precio_mayorista"
   | "costo"
   | "stock_inicial"
-  | "stock_minimo";
+  | "stock_minimo"
+  | "moneda";
 
 /** Columnas de la plantilla, en orden. `alias`: otros encabezados aceptados (sin acentos ni mayúsculas). */
 export const COLUMNAS: { clave: Clave; titulo: string; requerida: boolean; alias: string[]; ayuda: string }[] = [
@@ -39,6 +41,13 @@ export const COLUMNAS: { clave: Clave; titulo: string; requerida: boolean; alias
     ayuda: "Solo para productos nuevos (queda como ajuste).",
   },
   { clave: "stock_minimo", titulo: "Stock mínimo", requerida: false, alias: ["stock minimo"], ayuda: "" },
+  {
+    clave: "moneda",
+    titulo: "Moneda",
+    requerida: false,
+    alias: ["moneda", "divisa"],
+    ayuda: "ARS o USD (vacío = ARS). Precios y costo van en esa moneda; no cambia la de un producto existente.",
+  },
 ];
 
 export type ProductoImportado = {
@@ -51,6 +60,8 @@ export type ProductoImportado = {
   costo: number | null;
   stock_inicial: number;
   stock_minimo: number | null;
+  /** null = no vino en la planilla (ARS para productos nuevos). */
+  moneda: Moneda | null;
 };
 
 export type FilaImportacion = {
@@ -68,7 +79,7 @@ export type AnalisisImportacion = {
   resumen: { crear: number; actualizar: number; conErrores: number; categoriasNuevas: string[] };
 };
 
-export type ProductoExistente = { sku: string; codigo_barras: string | null };
+export type ProductoExistente = { sku: string; codigo_barras: string | null; moneda?: Moneda };
 
 type Celda = string | number | boolean | Date | null | undefined | object;
 
@@ -178,6 +189,8 @@ export function analizarPlanilla(
     const nombre = texto(get("nombre"));
     const categoria = texto(get("categoria"));
     const codigo = texto(get("codigo_barras"));
+    const moneda = parseMoneda(texto(get("moneda")));
+    if (moneda === "invalida") errores.push("Moneda inválida (usá ARS o USD)");
     if (!sku) errores.push("Falta el SKU");
     else if (sku.length > 64) errores.push("El SKU tiene más de 64 caracteres");
     if (!nombre) errores.push("Falta el nombre");
@@ -227,6 +240,10 @@ export function analizarPlanilla(
     }
 
     const existe = sku ? porSku.has(sku) : false;
+    const monedaActual = sku ? porSku.get(sku)?.moneda : undefined;
+    if (existe && moneda && moneda !== "invalida" && monedaActual && moneda !== monedaActual) {
+      errores.push(`El producto está en ${monedaActual}: para cambiar la moneda editá el producto`);
+    }
     if (existe) {
       if (costo !== null) avisos.push("El costo no se cambia en productos existentes (se actualiza con compras)");
       if (stock_inicial) avisos.push("El stock no se cambia en productos existentes (usá compras o ajustes)");
@@ -252,6 +269,7 @@ export function analizarPlanilla(
         costo,
         stock_inicial: stock_inicial ?? 0,
         stock_minimo,
+        moneda: moneda === "invalida" ? null : moneda,
       },
     };
   });
@@ -281,6 +299,7 @@ export const productosImportadosSchema = z
       costo: z.number().min(0).max(9_999_999_999).nullable(),
       stock_inicial: z.number().int().min(0).max(1_000_000),
       stock_minimo: z.number().int().min(0).max(1_000_000).nullable(),
+      moneda: z.enum(["ARS", "USD"]).nullable(),
     }),
   )
   .min(1, { error: "No hay productos para importar" })
@@ -290,6 +309,7 @@ export const productosImportadosSchema = z
 export function filasPlantilla(): (string | number)[][] {
   return [
     COLUMNAS.map((c) => c.titulo),
-    ["VAP-001", "Vaper Mango Ice 5000 puffs", "Vapers", "7791234567890", 9500, 7000, 4000, 10, 3],
+    ["VAP-001", "Vaper Mango Ice 5000 puffs", "Vapers", "7791234567890", 9500, 7000, 4000, 10, 3, "ARS"],
+    ["POD-001", "Pod recargable", "Pods", "7791234567891", 25, 20, 12, 5, 2, "USD"],
   ];
 }

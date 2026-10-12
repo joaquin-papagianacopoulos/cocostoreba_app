@@ -29,9 +29,16 @@ export type RpcItem = {
   precio_unitario: number;
   descuento: number;
   promocion_id: string | null;
+  /** Precio en USD del producto (solo informativo, para el comprobante). */
+  precio_usd: number | null;
 };
 
-export type ProductoVendible = ProductoParaPrecio & { nombre: string; activo: boolean };
+/** Precios en PESOS (ya convertidos). `usd`: precios originales si el producto está en dólares. */
+export type ProductoVendible = ProductoParaPrecio & {
+  nombre: string;
+  activo: boolean;
+  usd: { precio_minorista: number; precio_mayorista: number } | null;
+};
 
 export type VentaArmada = { items: RpcItem[]; totales: TotalesVenta };
 
@@ -65,12 +72,19 @@ export function armarVenta(
   }
 
   const totales = calcularVenta(lineas, canal, promos, fecha, descuento);
-  const items = totales.lineas.map((l) => ({
-    producto_id: l.producto_id,
-    cantidad: l.cantidad,
-    precio_unitario: l.precio_unitario,
-    descuento: l.descuento,
-    promocion_id: l.promocion?.id ?? null,
-  }));
+  const items = totales.lineas.map((l) => {
+    const producto = productos.get(l.producto_id)!;
+    // El precio en USD se informa solo si la línea usa el precio de lista convertido (no uno negociado).
+    const lista = canal === "mayorista" ? producto.precio_mayorista : producto.precio_minorista;
+    const usd = producto.usd ? (canal === "mayorista" ? producto.usd.precio_mayorista : producto.usd.precio_minorista) : null;
+    return {
+      producto_id: l.producto_id,
+      cantidad: l.cantidad,
+      precio_unitario: l.precio_unitario,
+      descuento: l.descuento,
+      promocion_id: l.promocion?.id ?? null,
+      precio_usd: usd !== null && l.precio_unitario === lista ? usd : null,
+    };
+  });
   return { ok: true, venta: { items, totales } };
 }

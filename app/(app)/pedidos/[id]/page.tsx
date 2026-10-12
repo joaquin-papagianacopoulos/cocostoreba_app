@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { CotizacionBadge } from "@/components/cotizacion-badge";
+import { getCotizacion } from "@/lib/cotizacion-server";
 import { VentaAcciones } from "@/components/venta-acciones";
 import { VentaItemsTable } from "@/components/venta-items-table";
 import { formatNumeroComprobante } from "@/lib/comprobante/data";
@@ -26,12 +28,15 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
   let editor = null;
   if (acciones.editar) {
     const supabase = await createClient();
+    const cotizacion = await getCotizacion();
     const [productos, promos, { data: clientes }] = await Promise.all([
-      getProductosActivos(),
+      getProductosActivos(cotizacion?.venta ?? null),
       getPromosActivas(),
       supabase.from("clientes").select("id, nombre").order("nombre"),
     ]);
     editor = (
+      <>
+      {productos.some((p) => p.moneda === "USD") && <CotizacionBadge cotizacion={cotizacion} className="mb-3" />}
       <PedidoEditor
         pedidoId={venta.id}
         productos={productos}
@@ -50,6 +55,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
           notas: venta.notas,
         }}
       />
+      </>
     );
   }
 
