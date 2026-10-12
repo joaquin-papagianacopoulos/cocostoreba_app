@@ -164,6 +164,9 @@ export function Pos({
               >
                 Ver / imprimir comprobante
               </a>
+              <a href={`/ventas/${resultado.venta.id}/pdf?descargar=1`} className={btn}>
+                Descargar PDF
+              </a>
             </div>
           </div>
         )}
