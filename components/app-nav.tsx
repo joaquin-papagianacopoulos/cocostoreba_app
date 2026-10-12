@@ -37,7 +37,7 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
 export function AppNav({ logout }: { logout: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const current = NAV_ITEMS.find((i) => isActive(pathname, i.href))?.label ?? "Vape App";
+  const current = NAV_ITEMS.find((i) => isActive(pathname, i.href))?.label ?? "CocoStore APP";
 
   // Cierra el menú mobile al cambiar de ruta.
   useEffect(() => setOpen(false), [pathname]);
@@ -46,7 +46,7 @@ export function AppNav({ logout }: { logout: React.ReactNode }) {
     <>
       {/* Desktop */}
       <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-black/10 p-3 md:flex dark:border-white/15">
-        <div className="px-3 pt-1 pb-4 text-lg font-semibold">Vape App</div>
+        <div className="px-3 pt-1 pb-4 text-lg font-semibold">CocoStore APP</div>
         <nav aria-label="Principal" className="flex-1 overflow-y-auto">
           <NavLinks pathname={pathname} />
         </nav>

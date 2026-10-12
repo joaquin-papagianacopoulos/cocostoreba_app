@@ -39,11 +39,14 @@ describe("productoCreateSchema", () => {
     expect(campos).toEqual(expect.arrayContaining(["sku", "precio_minorista", "stock_minimo"]));
   });
 
-  it("checkbox ausente = inactivo; edición no acepta stock ni costo", () => {
-    const r = productoUpdateSchema.parse({ ...valido, activo: undefined, stock: "999", costo: "1" });
+  it("checkbox ausente = inactivo; en edición costo y stock son opcionales", () => {
+    const r = productoUpdateSchema.parse({ ...valido, activo: undefined, stock: "999", costo: "1,5" });
     expect(r.activo).toBe(false);
-    expect(r).not.toHaveProperty("stock");
-    expect(r).not.toHaveProperty("costo");
+    expect(r.stock).toBe(999);
+    expect(r.costo).toBe(1.5);
+    const vacio = productoUpdateSchema.parse({ ...valido, stock: "", costo: "" });
+    expect(vacio.stock).toBeUndefined();
+    expect(vacio.costo).toBeUndefined();
   });
 });
 

@@ -110,13 +110,37 @@ export function ProductForm({ action, categorias, producto }: Props) {
           </label>
         </>
       ) : (
-        <p className="text-sm opacity-70 sm:col-span-2">
-          Costo actual y stock ({producto.stock} u.) se actualizan desde{" "}
-          <Link href="/stock" className="underline">
+        <>
+          {/* Para mandar costo/stock solo si se tocaron (si no, una venta mientras tanto se pisaría). */}
+          <input type="hidden" name="costo_original" value={String(producto.costo)} />
+          <input type="hidden" name="stock_original" value={String(producto.stock)} />
+          <label className={label}>
+            {`Costo unitario${enMoneda}`}
+            <input
+              name="costo"
+              type="number"
+              step="0.01"
+              min="0"
+              key={`costo-${moneda}`}
+              defaultValue={cambiaMoneda ? "" : String(producto.costo)}
+              placeholder={cambiaMoneda ? "Se convierte solo (o cargalo)" : undefined}
+              className={input}
+            />
+            <FieldError errors={e} name="costo" />
+          </label>
+          <label className={label}>
             Stock
-          </Link>{" "}
-          con compras y ajustes.
-        </p>
+            <input name="stock" type="number" step="1" min="0" defaultValue={producto.stock} className={input} />
+            <span className="text-xs font-normal opacity-70">
+              Si lo cambiás queda registrado como ajuste en{" "}
+              <Link href={`/stock?producto=${producto.id}`} className="underline">
+                movimientos
+              </Link>
+              .
+            </span>
+            <FieldError errors={e} name="stock" />
+          </label>
+        </>
       )}
 
       <label className={label}>

@@ -1,4 +1,4 @@
-# Especificación — Vape App
+# Especificación — CocoStore APP
 
 ## 1. Objetivo
 
@@ -132,6 +132,10 @@ Ventas minoristas y pedidos mayoristas comparten tablas (`ventas` / `venta_items
 - Comprobante PDF: muestra la cotización usada y "US$ x c/u" en los ítems en dólares.
 - Dashboard: muestra la cotización vigente; el valor del stock convierte los productos USD con la última cotización guardada. Ventas, CMV y ganancias son en pesos.
 - Excel: columna opcional "Moneda" (ARS/USD); no cambia la moneda de un producto existente.
+
+### Edición manual de productos
+- Costo, precios, stock y stock mínimo se pueden cambiar a mano sin registrar compras: desde la ficha del producto o desde la **edición rápida** de /productos (planilla editable de todos los productos filtrados, se guarda todo junto).
+- Va por la RPC `editar_productos` (una transacción). El costo se reemplaza tal cual (no es promedio). Un cambio de stock queda como movimiento `ajuste` con motivo "Edición manual" por la diferencia. En la ficha solo se mandan costo/stock si se modificaron (para no pisar una venta hecha mientras tanto).
 
 ### Gastos
 - Fecha, categoría, monto, descripción, adjunto opcional (jpg/png/pdf, máx 5 MB) subido a Storage bucket privado `comprobantes`.

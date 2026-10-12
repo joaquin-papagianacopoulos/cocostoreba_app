@@ -1,4 +1,4 @@
-# Vape App — instrucciones para el agente
+# CocoStore APP — instrucciones para el agente
 
 App de gestión para **un solo usuario**: control de stock, punto de venta minorista, armado de pedidos mayoristas, comprobantes PDF, costos/ganancias/promociones, gastos con comprobantes y dashboard con filtros por fecha.
 

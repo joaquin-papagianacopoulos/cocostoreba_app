@@ -44,7 +44,12 @@ export async function crearProducto(_prev: FormState, formData: FormData): Promi
 export async function actualizarProducto(id: string, _prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = productoUpdateSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) return invalid(parsed.error);
-  const { moneda, precio_minorista, precio_mayorista, ...resto } = parsed.data;
+  const { moneda, precio_minorista, precio_mayorista, costo: costoForm, stock: stockForm, ...resto } = parsed.data;
+  // Costo y stock solo si se cambiaron en el form (si no, una venta en el medio se pisaría).
+  const cambio = (valor: number | undefined, original: FormDataEntryValue | null) =>
+    valor !== undefined && Number(original) !== valor ? valor : undefined;
+  const costo = cambio(costoForm, formData.get("costo_original"));
+  const stock = cambio(stockForm, formData.get("stock_original"));
 
   const supabase = await createClient();
   const { data: actual } = await supabase.from("productos").select("moneda").eq("id", id).maybeSingle();
@@ -69,6 +74,14 @@ export async function actualizarProducto(id: string, _prev: FormState, formData:
       p_precio_mayorista: precio_mayorista,
     });
     if (monedaError) return { error: friendlyDbError(monedaError, "No se pudo cambiar la moneda") };
+  }
+
+  // Costo y stock a mano (sin compras): editar_productos deja el ajuste de stock en movimientos.
+  if (costo !== undefined || stock !== undefined) {
+    const { error: edicionError } = await supabase.rpc("editar_productos", {
+      p_items: [{ id, costo: costo ?? null, stock: stock ?? null }],
+    });
+    if (edicionError) return { error: friendlyDbError(edicionError, "No se pudo actualizar costo o stock") };
   }
 
   revalidatePath("/productos");
@@ -114,4 +127,40 @@ export async function borrarCategoria(id: string): Promise<FormState> {
   if (error) return { error: friendlyDbError(error) };
   revalidatePath("/productos", "layout");
   return { ok: true };
+}
+
+const edicionRapidaSchema = z
+  .array(
+    z.object({
+      id: z.uuid(),
+      costo: z.number().min(0).max(9_999_999_999).optional(),
+      precio_minorista: z.number().min(0).max(9_999_999_999).optional(),
+      precio_mayorista: z.number().min(0).max(9_999_999_999).optional(),
+      stock: z.number().int().min(0).max(1_000_000).optional(),
+      stock_minimo: z.number().int().min(0).max(1_000_000).optional(),
+    }),
+  )
+  .min(1, { error: "No hay cambios para guardar" })
+  .max(2000);
+
+export type EdicionRapidaItem = z.input<typeof edicionRapidaSchema>[number];
+
+/** Guarda en una sola transacción los cambios de la edición rápida (solo los campos tocados). */
+export async function guardarEdicionRapida(items: EdicionRapidaItem[]): Promise<{ ok: boolean; error?: string; cambios?: number }> {
+  const parsed = edicionRapidaSchema.safeParse(items);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("editar_productos", { p_items: parsed.data });
+  if (error) {
+    return {
+      ok: false,
+      error:
+        error.code === "PGRST202"
+          ? "Falta la función de edición en la base: aplicá la migración 0008_edicion_manual.sql"
+          : friendlyDbError(error, "No se pudieron guardar los cambios"),
+    };
+  }
+  revalidatePath("/productos");
+  revalidatePath("/stock");
+  return { ok: true, cambios: data as number };
 }

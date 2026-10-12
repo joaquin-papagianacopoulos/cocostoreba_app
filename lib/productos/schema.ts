@@ -19,8 +19,12 @@ const base = {
   moneda: z.enum(["ARS", "USD"], { error: "Elegí la moneda" }).default("ARS"),
 };
 
-/** Edición: costo y stock no se tocan acá (cambian con compras y ajustes). */
-export const productoUpdateSchema = z.object(base);
+/** Edición: costo y stock opcionales (vacío = no cambia). El stock nuevo queda como ajuste. */
+export const productoUpdateSchema = z.object({
+  ...base,
+  costo: optionalMoneyInput("Costo"),
+  stock: optionalIntInput("Stock", { min: 0, max: 1_000_000 }),
+});
 
 /** Alta: además, costo inicial y stock inicial opcionales. */
 export const productoCreateSchema = z.object({

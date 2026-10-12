@@ -8,9 +8,10 @@ import { isStockBajo } from "@/lib/productos/schema";
 import { cambiarActivoProducto } from "@/lib/productos/actions";
 import { ilikeAny, sanitizeSearch } from "@/lib/search";
 import type { Categoria, Producto } from "@/lib/types";
+import { EdicionRapida } from "./edicion-rapida";
 import { badge, btn, btnPrimary, cx, input, table, td, th } from "@/lib/ui";
 
-type SearchParams = Promise<{ q?: string; inactivos?: string; bajo?: string }>;
+type SearchParams = Promise<{ q?: string; inactivos?: string; bajo?: string; editar?: string }>;
 
 /** Monto en la moneda del producto. */
 function precio(p: Producto, monto: Producto["costo"]) {
@@ -21,6 +22,7 @@ export default async function ProductosPage({ searchParams }: { searchParams: Se
   const params = await searchParams;
   const q = sanitizeSearch(params.q);
   const verInactivos = params.inactivos === "1";
+  const editar = params.editar === "1";
   const soloBajo = params.bajo === "1";
 
   const supabase = await createClient();
@@ -41,6 +43,17 @@ export default async function ProductosPage({ searchParams }: { searchParams: Se
   const productos = soloBajo ? todos.filter(isStockBajo) : todos;
   const cantidadBajo = todos.filter((p) => p.activo && isStockBajo(p)).length;
 
+  // Misma URL con o sin ?editar=1 (conserva búsqueda y filtros).
+  const conEditar = (on: boolean) => {
+    const sp = new URLSearchParams();
+    if (q) sp.set("q", q);
+    if (soloBajo) sp.set("bajo", "1");
+    if (verInactivos) sp.set("inactivos", "1");
+    if (on) sp.set("editar", "1");
+    const qs = sp.toString();
+    return qs ? `/productos?${qs}` : "/productos";
+  };
+
   return (
     <>
       <PageHeader
@@ -48,6 +61,9 @@ export default async function ProductosPage({ searchParams }: { searchParams: Se
         description={cantidadBajo > 0 ? `${cantidadBajo} producto(s) con stock bajo` : undefined}
         actions={
           <>
+            <Link href={conEditar(!editar)} className={editar ? btnPrimary : btn}>
+              {editar ? "Ver lista" : "Edición rápida"}
+            </Link>
             <Link href="/productos/categorias" className={btn}>
               Categorías
             </Link>
@@ -62,6 +78,7 @@ export default async function ProductosPage({ searchParams }: { searchParams: Se
       />
 
       <form method="get" className="mb-4 flex flex-wrap items-center gap-3">
+        {editar && <input type="hidden" name="editar" value="1" />}
         <input
           type="search"
           name="q"
@@ -80,7 +97,24 @@ export default async function ProductosPage({ searchParams }: { searchParams: Se
         </button>
       </form>
 
-      {productos.length === 0 ? (
+      {editar && productos.length > 0 ? (
+        <EdicionRapida
+          salirHref={conEditar(false)}
+          filas={productos.map((p) => ({
+            id: p.id,
+            nombre: p.nombre,
+            sku: p.sku,
+            moneda: p.moneda,
+            valores: {
+              costo: parseMoney(p.costo),
+              precio_minorista: parseMoney(p.precio_minorista),
+              precio_mayorista: parseMoney(p.precio_mayorista),
+              stock: p.stock,
+              stock_minimo: p.stock_minimo,
+            },
+          }))}
+        />
+      ) : productos.length === 0 ? (
         <EmptyState title={q || soloBajo ? "No hay productos que coincidan" : "Todavía no hay productos"}>
           {!q && !soloBajo && (
             <Link href="/productos/nuevo" className="underline">

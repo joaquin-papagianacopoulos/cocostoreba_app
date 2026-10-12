@@ -1,4 +1,4 @@
-# Vape App
+# CocoStore APP
 
 App de gestión para **un solo usuario**: stock, punto de venta minorista, pedidos mayoristas,
 comprobantes PDF, promociones, gastos con comprobantes y un dashboard con ganancias.
@@ -31,6 +31,7 @@ vez cada una:
 | `0005_reportes.sql` | Funciones de reportes del dashboard |
 | `0006_importar_productos.sql` | Carga masiva de productos desde Excel |
 | `0007_moneda_usd.sql` | Productos en USD, cotizaciones del dólar cripto |
+| `0008_edicion_manual.sql` | Editar costo, precios y stock a mano (ficha y edición rápida) |
 
 **Opción A — SQL Editor (sin instalar nada):** en el dashboard de Supabase andá a **SQL Editor → New query**,
 pegá el contenido completo de cada archivo y tocá **Run**, de a uno y en orden. Cada uno tiene que
@@ -44,7 +45,7 @@ npx supabase link --project-ref <ref-de-tu-proyecto>
 npx supabase db push
 ```
 
-Nunca edites una migración que ya aplicaste: los cambios van en un archivo nuevo (`0008_...sql`).
+Nunca edites una migración que ya aplicaste: los cambios van en un archivo nuevo (`0009_...sql`).
 
 Para comprobar que quedó todo bien, corré en el SQL Editor:
 

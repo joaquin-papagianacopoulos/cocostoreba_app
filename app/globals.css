@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
+/* La app es siempre clara: `dark:` solo aplicaría con una clase .dark, que no se usa. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
 
@@ -23,22 +27,6 @@
   --color-series-3: var(--series-3);
   --color-delta-good: var(--delta-good);
   --color-delta-bad: var(--delta-bad);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --series-3: #199e70;
-    --chart-grid: #2c2c2a;
-    --chart-axis: #898781;
-    --chart-text: #c3c2b7;
-    --delta-good: #0ca30c;
-    --delta-bad: #e66767;
-  }
 }
 
 body {
